@@ -3,6 +3,7 @@
 
 import { db, DATA_VERSION } from './db.js';
 import { validaFileDati } from './validazione.js';
+import { migraDati, AUTORE_DEFAULT } from './migrazione.js';
 
 // Max length for the file name (without extension) before truncating, to stay
 // within file-system limits.
@@ -216,8 +217,12 @@ export async function importaDati(file, onDone) {
     return;
   }
 
+  // Upgrade older files to the current format before validating (e.g. v1 files
+  // predate the mandatory recipe author).
+  const { dati: datiMigrati, migrato } = migraDati(dati);
+
   // Structural validation: refuse a malformed file before clearing anything.
-  const errori = validaFileDati(dati);
+  const errori = validaFileDati(datiMigrati);
   if (errori.length > 0) {
     const elenco = errori
       .slice(0, MAX_ERRORI_MOSTRATI)
@@ -237,11 +242,16 @@ export async function importaDati(file, onDone) {
   }
 
   // From here on the file is valid: these are guaranteed arrays.
-  const { ingredienti, ricette } = dati;
+  const { ingredienti, ricette } = datiMigrati;
 
+  const avvisoMigrazione = migrato
+    ? '\n\nIl file è in un formato precedente: alle ricette senza autore verrà ' +
+      `assegnato "${AUTORE_DEFAULT}".`
+    : '';
   const ok = confirm(
     `Importare ${ingredienti.length} ingredienti e ${ricette.length} ricette?\n\n` +
-      'I dati attuali verranno SOSTITUITI con quelli del file.'
+      'I dati attuali verranno SOSTITUITI con quelli del file.' +
+      avvisoMigrazione
   );
   if (!ok) return;
 

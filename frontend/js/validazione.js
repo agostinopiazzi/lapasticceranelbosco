@@ -8,7 +8,7 @@
 // data format this enforces is documented in docs/formato-file-json.md — keep
 // the two in sync.
 
-import { DATA_VERSION } from './db.js';
+import { DATA_VERSION } from './versione.js';
 
 function isObject(v) {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -74,6 +74,7 @@ function validaRicetta(ric, indice, errori, idVisti, idIngredientiValidi, riferi
   }
 
   if (!isNonEmptyString(ric.nome)) errori.push(`${dove}: campo "nome" mancante o vuoto.`);
+  if (!isNonEmptyString(ric.autore)) errori.push(`${dove}: campo "autore" mancante o vuoto.`);
 
   if (!Number.isInteger(ric.porzioni_base) || ric.porzioni_base < 1) {
     errori.push(

@@ -1,5 +1,5 @@
 {
-  "versione": 1,
+  "versione": 2,
   "ingredienti": [
     {
       "id": "ing_001",
@@ -180,6 +180,7 @@
     {
       "id": "ric_001",
       "nome": "Frollino Earl Grey",
+      "autore": "La Pasticcera nel Bosco",
       "porzioni_base": 1,
       "ingredienti": [
         {
@@ -244,6 +245,7 @@
     {
       "id": "ric_002",
       "nome": "Impasto Croissant",
+      "autore": "La Pasticcera nel Bosco",
       "porzioni_base": 1,
       "ingredienti": [
         {
@@ -324,6 +326,7 @@
     {
       "id": "ric_003",
       "nome": "Impasto al cacao",
+      "autore": "La Pasticcera nel Bosco",
       "porzioni_base": 1,
       "ingredienti": [
         {
@@ -359,6 +362,7 @@
     {
       "id": "ric_004",
       "nome": "Crema alla senape da cottura",
+      "autore": "La Pasticcera nel Bosco",
       "porzioni_base": 1,
       "ingredienti": [
         {

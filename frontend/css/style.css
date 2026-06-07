@@ -341,6 +341,17 @@ legend {
   font-weight: 600;
 }
 
+/* Recipe author line on the card (autore-ricetta spec). */
+.ricetta-autore {
+  margin: -0.4rem 0 0.4rem;
+  font-size: 0.85rem;
+  font-style: italic;
+  color: var(--muted);
+}
+.ricetta-autore:empty {
+  display: none;
+}
+
 /* Checkbox rows for partial export (export-parziale spec). */
 .seleziona-tutte {
   display: flex;

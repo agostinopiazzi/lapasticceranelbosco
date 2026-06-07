@@ -13,7 +13,9 @@ db.version(1).stores({
 });
 
 // Data format version we read/write (matches seed.json and the export file, §5b).
-export const DATA_VERSION = 1;
+// Defined in its own module so validation/migration can use it without Dexie.
+export { DATA_VERSION } from './versione.js';
+import { DATA_VERSION } from './versione.js';
 
 // Load the starter dataset only on first launch (both stores empty), so we
 // never overwrite the user's own changes on reload. See CLAUDE.md §9.4.

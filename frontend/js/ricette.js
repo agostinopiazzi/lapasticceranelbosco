@@ -85,6 +85,10 @@ async function renderLista(list, container) {
     meta.textContent = `${r.porzioni_base || 1} porzione/i`;
     top.append(nome, meta);
 
+    const autoreEl = document.createElement('p');
+    autoreEl.className = 'ricetta-autore';
+    if (r.autore) autoreEl.textContent = `di ${r.autore}`;
+
     const tags = document.createElement('div');
     tags.className = 'tags';
     for (const t of r.tag || []) {
@@ -134,7 +138,7 @@ async function renderLista(list, container) {
     del.onclick = () => eliminaRicetta(r, container);
     azioni.append(edit, del);
 
-    card.append(top, tags, dettagli, azioni);
+    card.append(top, autoreEl, tags, dettagli, azioni);
     list.append(card);
   }
 }
@@ -260,6 +264,9 @@ async function openForm(container, opts = {}) {
       <label>Nome
         <input name="nome" required>
       </label>
+      <label>Autore
+        <input name="autore" required>
+      </label>
       <label>Porzioni base
         <input name="porzioni_base" type="number" min="1" step="1" value="1">
       </label>
@@ -355,6 +362,7 @@ async function openForm(container, opts = {}) {
   if (prefill) {
     const nomeIniziale = isCopia ? `Copia di ${prefill.nome || ''}` : prefill.nome || '';
     form.querySelector('[name=nome]').value = nomeIniziale;
+    form.querySelector('[name=autore]').value = prefill.autore || '';
     form.querySelector('[name=porzioni_base]').value = prefill.porzioni_base || 1;
     form.querySelector('[name=tag]').value = (prefill.tag || []).join(', ');
     for (const riga of prefill.ingredienti || []) righeIng.append(rigaIngrediente(riga));
@@ -384,7 +392,8 @@ async function openForm(container, opts = {}) {
   form.onsubmit = async (e) => {
     e.preventDefault();
     const nome = form.querySelector('[name=nome]').value.trim();
-    if (!nome) return;
+    const autore = form.querySelector('[name=autore]').value.trim();
+    if (!nome || !autore) return; // both mandatory (formato-file-json)
 
     const porzioni = parseInt(form.querySelector('[name=porzioni_base]').value, 10) || 1;
 
@@ -414,6 +423,7 @@ async function openForm(container, opts = {}) {
 
     const data = {
       nome,
+      autore,
       porzioni_base: porzioni,
       ingredienti: righeIngredienti,
       istruzioni,

@@ -12,12 +12,14 @@ La spec descrive *cosa* viene controllato; la descrizione del formato dice *com'
 ## Comportamento
 1. L'utente sceglie un file con "Importa dati".
 2. Il sistema prova a leggerlo come JSON. Se non è JSON valido → messaggio chiaro, **nessuna modifica**.
-3. Il sistema **valida la struttura** (vedi sotto). Se trova problemi:
+3. Se il file è di una **versione precedente**, viene **migrato** al formato corrente prima della
+   validazione (vedi [autore-ricetta.md](autore-ricetta.md) e [../formato-file-json.md](../formato-file-json.md) §8); l'utente è avvisato.
+4. Il sistema **valida la struttura** (vedi sotto). Se trova problemi:
    - mostra un messaggio con il **numero di problemi** e l'**elenco** dei primi (gli altri riassunti);
    - **non tocca** i dati locali;
    - non procede oltre.
-4. Se il file è valido, chiede conferma della sostituzione e importa dentro una transazione atomica.
-5. Se durante il salvataggio si verifica un errore imprevisto, la transazione viene annullata
+5. Se il file è valido, chiede conferma della sostituzione e importa dentro una transazione atomica.
+6. Se durante il salvataggio si verifica un errore imprevisto, la transazione viene annullata
    (i dati restano quelli di prima) e l'utente è avvisato.
 
 ## Controlli effettuati
@@ -39,6 +41,7 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - È un oggetto.
 - `id`: testo non vuoto e **univoco** tra le ricette.
 - `nome`: testo non vuoto.
+- `autore`: testo non vuoto (vedi [autore-ricetta.md](autore-ricetta.md)).
 - `porzioni_base`: intero ≥ 1.
 - `ingredienti`: elenco di righe; ogni riga è un oggetto con:
   - `ingrediente_id`: testo non vuoto che **deve corrispondere** a un ingrediente presente nel file

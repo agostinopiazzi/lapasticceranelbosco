@@ -14,6 +14,7 @@ All'avvio della creazione di una nuova ricetta, l'utente può scegliere se parti
 
 ## Dati copiati dalla ricetta base
 - Nome (suggerito come "Copia di …", modificabile)
+- Autore (precompilato con quello della ricetta di origine, modificabile — vedi [autore-ricetta.md](autore-ricetta.md))
 - Numero di porzioni
 - Elenco ingredienti: ingrediente, quantità, unità di misura
 - Procedimento / note

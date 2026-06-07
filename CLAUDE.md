@@ -91,6 +91,7 @@ Conseguenze:
 ### Ricetta
 - `id`
 - `nome`
+- `autore` (chi ha creato la ricetta; obbligatorio dalla versione 2)
 - `porzioni_base` (numero di porzioni a cui si riferiscono le quantità)
 - `istruzioni` (passi)
 - `ingredienti`: lista di righe `{ ingrediente_id, quantita, unita_misura }`
@@ -135,7 +136,7 @@ Struttura del file di export (riepilogo; dettaglio in [docs/formato-file-json.md
 
 ```json
 {
-  "versione": 1,
+  "versione": 2,
   "ingredienti": [
     { "id": "ing_001", "nome": "Farina 00", "unita_misura": "g", "categoria": "farine" }
   ],
@@ -143,6 +144,7 @@ Struttura del file di export (riepilogo; dettaglio in [docs/formato-file-json.md
     {
       "id": "ric_001",
       "nome": "Pane base",
+      "autore": "Mario Rossi",
       "porzioni_base": 4,
       "ingredienti": [
         { "ingrediente_id": "ing_001", "quantita": 500, "unita_misura": "g" }
@@ -218,6 +220,7 @@ Stato delle feature:
 | [nome-file-export.md](docs/specs/nome-file-export.md) — scelta del nome del file `.json` in esportazione (nome predefinito con data, sanificazione caratteri, estensione forzata) | ✅ Implementata |
 | [export-parziale.md](docs/specs/export-parziale.md) — export totale (tutti gli ingredienti, anche orfani) ed export parziale (ricette selezionate + soli ingredienti referenziati) | ✅ Implementata |
 | [import-validazione.md](docs/specs/import-validazione.md) — validazione strutturale del file `.json` in importazione (formato corretto forzato, dati locali al sicuro) | ✅ Implementata |
+| [autore-ricetta.md](docs/specs/autore-ricetta.md) — campo `autore` obbligatorio sulle ricette (formato dati v2 + migrazione automatica dei file v1) | ✅ Implementata |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 

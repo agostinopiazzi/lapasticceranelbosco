@@ -30,6 +30,11 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - `versione` presente e uguale alla versione supportata dall'app.
 - `ingredienti` e `ricette` sono **elenchi** (array).
 
+### Campi non previsti (a ogni livello)
+- A livello di file, ingrediente, ricetta e riga ingrediente sono ammessi **solo** i campi elencati
+  qui e in [../formato-file-json.md](../formato-file-json.md). La presenza di **qualsiasi campo
+  estraneo** fa **fallire l'import**, con un messaggio che indica i campi non previsti trovati.
+
 ### Ogni ingrediente
 - È un oggetto.
 - `id`: testo non vuoto e **univoco** tra gli ingredienti.
@@ -59,8 +64,8 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - Nessuna intelligenza artificiale: solo controlli strutturali e aritmetici espliciti.
 - La validazione avviene **prima** di qualunque scrittura: i dati locali sono intoccabili finché il
   file non è valido.
-- Campi extra non previsti non bloccano l'import (compatibilità con versioni future), ma il formato
-  canonico resta quello descritto in [../formato-file-json.md](../formato-file-json.md).
+- I campi non previsti **bloccano l'import**: il file deve contenere esattamente i campi del formato
+  canonico descritto in [../formato-file-json.md](../formato-file-json.md) (campi facoltativi a parte).
 - Coerenza app↔import: il form ingredienti rende obbligatori `unita_misura` e `categoria`, così l'app
   non può creare dati che il proprio import rifiuterebbe.
 
@@ -74,4 +79,6 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - `id` duplicati tra ingredienti o tra ricette → errore puntuale.
 - Ricetta che cita un `ingrediente_id` inesistente nel file → errore puntuale.
 - `quantita` testuale o negativa → errore; `null` è ammesso (quantità "a piacere"/`q.b.`).
+- Campo estraneo (es. una ricetta con `"prezzo": 10` o un refuso come `"none"` al posto di `"nome"`)
+  → errore che elenca i campi non previsti.
 - File enorme con molti errori → vengono mostrati i primi e riassunti gli altri.

@@ -10,6 +10,13 @@
 
 import { DATA_VERSION } from './versione.js';
 
+// Exact set of allowed keys at each level. Any other key makes the file invalid:
+// the import refuses unexpected fields (keep in sync with docs/formato-file-json.md).
+const CAMPI_FILE = ['versione', 'ingredienti', 'ricette'];
+const CAMPI_INGREDIENTE = ['id', 'nome', 'unita_misura', 'categoria'];
+const CAMPI_RICETTA = ['id', 'nome', 'autore', 'porzioni_base', 'ingredienti', 'istruzioni', 'tag'];
+const CAMPI_RIGA_INGREDIENTE = ['ingrediente_id', 'quantita', 'unita_misura'];
+
 function isObject(v) {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
@@ -25,6 +32,14 @@ function mostra(v) {
   return JSON.stringify(v);
 }
 
+// Push an error if `oggetto` carries keys outside `ammessi` (unexpected fields).
+function verificaCampiNonPrevisti(oggetto, ammessi, dove, errori) {
+  const extra = Object.keys(oggetto).filter((k) => !ammessi.includes(k));
+  if (extra.length > 0) {
+    errori.push(`${dove}: campo/i non previsto/i: ${extra.map((k) => `"${k}"`).join(', ')}.`);
+  }
+}
+
 // Validate one ingredient object, pushing any problems into `errori` and
 // returning its id (so the caller can track duplicates / referenced ids).
 function validaIngrediente(ing, indice, errori, idVisti) {
@@ -34,6 +49,7 @@ function validaIngrediente(ing, indice, errori, idVisti) {
     return null;
   }
   const dove = isNonEmptyString(ing.nome) ? `${etichetta} ("${ing.nome}")` : etichetta;
+  verificaCampiNonPrevisti(ing, CAMPI_INGREDIENTE, dove, errori);
 
   let id = null;
   if (!isNonEmptyString(ing.id)) {
@@ -64,6 +80,7 @@ function validaRicetta(ric, indice, errori, idVisti, idIngredientiValidi, riferi
     return;
   }
   const dove = isNonEmptyString(ric.nome) ? `${etichetta} ("${ric.nome}")` : etichetta;
+  verificaCampiNonPrevisti(ric, CAMPI_RICETTA, dove, errori);
 
   if (!isNonEmptyString(ric.id)) {
     errori.push(`${dove}: campo "id" mancante o vuoto.`);
@@ -92,6 +109,7 @@ function validaRicetta(ric, indice, errori, idVisti, idIngredientiValidi, riferi
         errori.push(`${dr}: non è un oggetto valido.`);
         return;
       }
+      verificaCampiNonPrevisti(riga, CAMPI_RIGA_INGREDIENTE, dr, errori);
       if (!isNonEmptyString(riga.ingrediente_id)) {
         errori.push(`${dr}: "ingrediente_id" mancante o vuoto.`);
       } else if (riferimentiVerificabili && !idIngredientiValidi.has(riga.ingrediente_id)) {
@@ -144,6 +162,9 @@ export function validaFileDati(dati) {
   }
 
   const errori = [];
+
+  // Reject unexpected top-level fields.
+  verificaCampiNonPrevisti(dati, CAMPI_FILE, 'File', errori);
 
   // versione
   if (!('versione' in dati)) {

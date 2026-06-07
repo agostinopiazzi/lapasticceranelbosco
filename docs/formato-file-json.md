@@ -44,8 +44,9 @@ Il file è **un singolo oggetto JSON** con esattamente questi tre campi di primo
 | `ingredienti` | array di [Ingrediente](#3-ingrediente) | sì | Può essere vuoto (`[]`). |
 | `ricette` | array di [Ricetta](#4-ricetta) | sì | Può essere vuoto (`[]`). |
 
-> Campi extra non elencati qui non sono previsti dal formato. L'import li tollera (non blocca), ma
-> non fanno parte della definizione canonica.
+> **Campi extra non sono ammessi.** Qualunque campo non elencato — a livello di file, ingrediente,
+> ricetta o riga ingrediente — fa **fallire l'import**. Sono consentiti esattamente i campi descritti
+> in questo documento, né più né meno (oltre a quelli facoltativi, che possono mancare).
 
 ---
 
@@ -132,6 +133,8 @@ Un file è considerato **valido** solo se rispetta **tutte** queste condizioni:
 7. Ogni riga ingrediente di ogni ricetta ha un `ingrediente_id` che **esiste** tra gli ingredienti
    del file e una `quantita` numero ≥ 0 oppure `null`.
 8. `istruzioni` è un array di stringhe; `tag` (se presente) è un array di stringhe non vuote.
+9. **Nessun campo non previsto** a nessun livello (file, ingrediente, ricetta, riga ingrediente):
+   la presenza di campi estranei fa fallire l'import.
 
 ---
 
@@ -185,6 +188,7 @@ per ragionamento automatico o per generare validatori in altri linguaggi. Non è
       "items": { "$ref": "#/$defs/ricetta" }
     }
   },
+  "additionalProperties": false,
   "$defs": {
     "ingrediente": {
       "type": "object",
@@ -194,7 +198,8 @@ per ragionamento automatico o per generare validatori in altri linguaggi. Non è
         "nome": { "type": "string", "minLength": 1 },
         "unita_misura": { "type": "string", "minLength": 1 },
         "categoria": { "type": "string", "minLength": 1 }
-      }
+      },
+      "additionalProperties": false
     },
     "ricetta": {
       "type": "object",
@@ -216,7 +221,8 @@ per ragionamento automatico o per generare validatori in altri linguaggi. Non è
           "type": "array",
           "items": { "type": "string", "minLength": 1 }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "rigaIngrediente": {
       "type": "object",
@@ -230,7 +236,8 @@ per ragionamento automatico o per generare validatori in altri linguaggi. Non è
           ]
         },
         "unita_misura": { "type": "string" }
-      }
+      },
+      "additionalProperties": false
     }
   }
 }

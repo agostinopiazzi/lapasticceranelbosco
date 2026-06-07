@@ -284,3 +284,74 @@ legend {
   gap: 0.6rem;
   margin-top: 0.5rem;
 }
+
+/* --- "Nuova ricetta" choice dialog --- */
+.scelta-intro {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+}
+.scelte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.scelta-grande {
+  padding: 0.9rem 1rem;
+  font-size: 1.05rem;
+  border-radius: 8px;
+  text-align: center;
+}
+.scelta-grande:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* --- Recipe-to-copy picker --- */
+.cerca {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+.lista-scelta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.voce-scelta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+}
+.voce-scelta:hover {
+  border-color: var(--accent);
+  background: var(--bg);
+}
+.voce-nome {
+  font-weight: 600;
+}
+
+/* --- Toast confirmation --- */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  padding: 0.6rem 1.1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  z-index: 200;
+  font-size: 0.95rem;
+}

@@ -177,7 +177,29 @@ Il generatore produce una o più ricette **a partire dalle indicazioni dell'uten
 - Priorità alla **semplicità d'uso** per utenti non tecnici: messaggi chiari, errori comprensibili, nessun gergo.
 - La logica di generazione deve restare **deterministica e testabile** (test unitari sui calcoli aritmetici).
 - Mantenere il backend **stateless** rispetto ai dati utente.
-- Prima di implementare una nuova feature: aggiornare questo file e/o scrivere una breve spec, poi usare Plan Mode.
+- Prima di implementare una nuova feature: scrivere/aggiornare la relativa **spec in `docs/specs/`** (vedi §8b), aggiornare questo file se cambiano architettura o modello dati, poi usare Plan Mode.
+
+### Calcoli condivisi
+- Tutta l'aritmetica sulle quantità (scalatura porzioni, arrotondamenti) vive in [frontend/js/calcoli.js](frontend/js/calcoli.js), così la stessa regola di arrotondamento è usata sia copiando una ricetta sia (in futuro) dal generatore (§6).
+
+---
+
+## 8b. Specifiche delle feature (`docs/specs/`)
+
+Le specifiche delle singole feature vivono nella cartella **`docs/specs/`**, un file Markdown per feature (approccio spec-anchored).
+
+- Ogni spec descrive **obiettivo, comportamento, dati coinvolti, vincoli, usabilità e casi limite** in italiano, indipendentemente dall'implementazione.
+- Flusso per una nuova feature: **scrivere/aggiornare la spec in `docs/specs/` → Plan Mode → implementazione → tenere allineati spec e `CLAUDE.md`**.
+- `CLAUDE.md` resta il riferimento globale (architettura, modello dati, convenzioni); le spec in `docs/specs/` descrivono il dettaglio delle singole funzionalità.
+
+Stato delle feature:
+
+| Spec | Stato |
+|---|---|
+| [crea-da-ricetta-esistente.md](docs/specs/crea-da-ricetta-esistente.md) — crea una nuova ricetta partendo da una esistente (copia + ricalcolo porzioni) | ✅ Implementata |
+| [nome-file-export.md](docs/specs/nome-file-export.md) — scelta del nome del file `.json` in esportazione (nome predefinito con data, sanificazione caratteri, estensione forzata) | ✅ Implementata |
+
+Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 
 ---
 

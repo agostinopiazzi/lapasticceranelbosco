@@ -344,12 +344,15 @@ legend {
 /* Recipe author line on the card (autore-ricetta spec). */
 .ricetta-autore {
   margin: -0.4rem 0 0.4rem;
-  font-size: 0.85rem;
-  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+.ricetta-autore .etichetta {
   color: var(--muted);
 }
-.ricetta-autore:empty {
-  display: none;
+.ricetta-autore .autore-mancante {
+  color: var(--muted);
+  font-style: italic;
 }
 
 /* Checkbox rows for partial export (export-parziale spec). */

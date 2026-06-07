@@ -85,9 +85,21 @@ async function renderLista(list, container) {
     meta.textContent = `${r.porzioni_base || 1} porzione/i`;
     top.append(nome, meta);
 
+    // Author line, always visible. Older recipes saved before the `autore`
+    // field show a clear fallback.
     const autoreEl = document.createElement('p');
     autoreEl.className = 'ricetta-autore';
-    if (r.autore) autoreEl.textContent = `di ${r.autore}`;
+    const autoreLab = document.createElement('span');
+    autoreLab.className = 'etichetta';
+    autoreLab.textContent = 'Autore: ';
+    const autoreVal = document.createElement('span');
+    if (r.autore) {
+      autoreVal.textContent = r.autore;
+    } else {
+      autoreVal.textContent = 'non indicato';
+      autoreVal.className = 'autore-mancante';
+    }
+    autoreEl.append(autoreLab, autoreVal);
 
     const tags = document.createElement('div');
     tags.className = 'tags';

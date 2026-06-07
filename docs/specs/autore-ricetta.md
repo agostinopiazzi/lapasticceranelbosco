@@ -8,7 +8,9 @@ attribuzioni.
 ## Comportamento
 1. Nel form di creazione/modifica ricetta compare un campo **"Autore"** (testo), **obbligatorio**:
    non si può salvare senza compilarlo.
-2. L'autore viene **mostrato** nella scheda della ricetta (es. *"di Mario Rossi"*).
+2. L'autore viene **mostrato** nella scheda della ricetta, sotto il titolo, come *"Autore: Mario Rossi"*.
+   La riga è sempre visibile; per le ricette salvate prima dell'introduzione del campo mostra
+   *"Autore: non indicato"*.
 3. Creando una ricetta **da una esistente** (copia), l'autore viene precompilato con quello della
    ricetta di origine e resta modificabile.
 4. L'autore fa parte dei dati della ricetta: è incluso in export (totale e parziale) e richiesto in

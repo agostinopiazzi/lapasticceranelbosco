@@ -221,6 +221,7 @@ Stato delle feature:
 | [export-parziale.md](docs/specs/export-parziale.md) — export totale (tutti gli ingredienti, anche orfani) ed export parziale (ricette selezionate + soli ingredienti referenziati) | ✅ Implementata |
 | [import-validazione.md](docs/specs/import-validazione.md) — validazione strutturale del file `.json` in importazione (formato corretto forzato, dati locali al sicuro) | ✅ Implementata |
 | [autore-ricetta.md](docs/specs/autore-ricetta.md) — campo `autore` obbligatorio sulle ricette (formato dati v2 + migrazione automatica dei file v1) | ✅ Implementata |
+| [ripristina-dati-iniziali.md](docs/specs/ripristina-dati-iniziali.md) — pulsante per svuotare i dati locali e ricaricare il seed, con conferma e backup opzionale | ✅ Implementata |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 

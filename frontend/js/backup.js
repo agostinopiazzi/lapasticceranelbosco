@@ -1,7 +1,7 @@
 // Export / import all local data as a single JSON file (CLAUDE.md §5b).
 // The file carries a `versione` field so older formats can be migrated later.
 
-import { db, DATA_VERSION } from './db.js';
+import { db, DATA_VERSION, ricaricaDatiIniziali } from './db.js';
 import { validaFileDati } from './validazione.js';
 import { migraDati, AUTORE_DEFAULT } from './migrazione.js';
 
@@ -69,7 +69,7 @@ export async function esportaDati() {
   ]);
 
   const payload = { versione: DATA_VERSION, ingredienti, ricette };
-  scaricaPayload(payload, nomeFilePredefinito());
+  return scaricaPayload(payload, nomeFilePredefinito());
 }
 
 // Partial export: the user picks which recipes to export; the file then carries
@@ -273,5 +273,57 @@ export async function importaDati(file, onDone) {
   }
 
   alert('Dati importati correttamente.');
+  if (onDone) onDone();
+}
+
+// Clear all local data and reload the example dataset (ripristina-dati-iniziali
+// spec). Asks for confirmation and offers to export a backup first.
+export function ripristinaDatiIniziali(onDone) {
+  const overlay = document.createElement('div');
+  overlay.className = 'form-overlay';
+  overlay.innerHTML = `
+    <div class="form-box">
+      <h3>Ripristina dati iniziali</h3>
+      <p>Questa operazione <strong>cancella tutte le tue ricette e i tuoi ingredienti</strong>
+      e ricarica il ricettario di esempio. <strong>Non è reversibile.</strong></p>
+      <p>Per sicurezza puoi prima esportare un backup dei dati attuali.</p>
+      <div class="scelte">
+        <button type="button" class="scelta-grande primary esporta-svuota">Esporta backup, poi svuota</button>
+        <button type="button" class="scelta-grande danger svuota-diretto">Svuota senza esportare</button>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="annulla">Annulla</button>
+      </div>
+    </div>
+  `;
+
+  overlay.querySelector('.annulla').onclick = () => overlay.remove();
+
+  overlay.querySelector('.esporta-svuota').onclick = async () => {
+    const esportato = await esportaDati();
+    // If the user cancelled the file-name prompt, do NOT wipe: the backup was
+    // not actually saved. Leave the dialog open so they can decide again.
+    if (!esportato) return;
+    overlay.remove();
+    await eseguiRipristino(onDone);
+  };
+
+  overlay.querySelector('.svuota-diretto').onclick = async () => {
+    overlay.remove();
+    await eseguiRipristino(onDone);
+  };
+
+  document.body.append(overlay);
+}
+
+// Perform the actual wipe + reseed, with user feedback.
+async function eseguiRipristino(onDone) {
+  try {
+    await ricaricaDatiIniziali();
+  } catch (err) {
+    alert(err?.message || 'Ripristino non riuscito. I dati non sono stati modificati.');
+    return;
+  }
+  alert('Dati svuotati e ricaricati con il ricettario di esempio.');
   if (onDone) onDone();
 }

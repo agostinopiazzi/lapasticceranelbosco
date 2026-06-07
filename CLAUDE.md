@@ -221,7 +221,8 @@ Stato delle feature:
 | [export-parziale.md](docs/specs/export-parziale.md) — export totale (tutti gli ingredienti, anche orfani) ed export parziale (ricette selezionate + soli ingredienti referenziati) | ✅ Implementata |
 | [import-validazione.md](docs/specs/import-validazione.md) — validazione strutturale del file `.json` in importazione (formato corretto forzato, dati locali al sicuro) | ✅ Implementata |
 | [autore-ricetta.md](docs/specs/autore-ricetta.md) — campo `autore` obbligatorio sulle ricette (formato dati v2 + migrazione automatica dei file v1) | ✅ Implementata |
-| [ripristina-dati-iniziali.md](docs/specs/ripristina-dati-iniziali.md) — pulsante per svuotare i dati locali e ricaricare il seed, con conferma e backup opzionale | ✅ Implementata |
+| [ripristina-dati-iniziali.md](docs/specs/ripristina-dati-iniziali.md) — pulsante "Ripristina dati di esempio": svuota i dati locali e ricarica il seed, con conferma e backup opzionale | ✅ Implementata |
+| [pannello-info.md](docs/specs/pannello-info.md) — pulsante "Info" con spiegazione sintetica di come funziona l'app | ✅ Implementata |
 | [ricerca-ingredienti.md](docs/specs/ricerca-ingredienti.md) — barra di ricerca ingredienti per nome o categoria | ✅ Implementata |
 | [ricerca-filtri-ricette.md](docs/specs/ricerca-filtri-ricette.md) — ricette: ricerca per nome/contenuto + filtri per tag e autore (combinati) | ✅ Implementata |
 
@@ -234,7 +235,7 @@ Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implement
 1. **Robustezza dell'autenticazione**: barriera morbida tra persone fidate, oppure protezione da tentativi attivi di accesso?
 2. **Indicazioni del generatore**: quali parametri può fornire l'utente e come vengono combinati?
 3. **Funzionamento offline**: serve che l'app funzioni offline dopo il primo caricamento (PWA), o basta l'accesso via URL con internet?
-4. **Dati iniziali**: ogni utente parte da un ricettario vuoto, oppure fornisci un set di ricette/ingredienti di base al primo avvio?
+4. **Dati iniziali**: ~~vuoto o set di base?~~ → **Deciso**: al primo avvio si caricano **dati di esempio** (ingredienti e ricette palesemente esemplificativi) pensati per mostrare le possibilità dell'app; sono modificabili/eliminabili e ripristinabili dal pulsante "Ripristina dati di esempio". Un pulsante "Info" spiega come funziona l'app.
 5. **Hosting**: ~~dove gira il backend~~ → **Deciso (provvisorio)**: per ora deploy statico su **GitHub Pages** senza backend né autenticazione (vedi nota in §3). Da rivalutare quando si introdurrà l'auth.
 
 ---

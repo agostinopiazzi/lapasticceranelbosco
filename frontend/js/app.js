@@ -9,6 +9,7 @@ import {
   importaDati,
   ripristinaDatiIniziali,
 } from './backup.js';
+import { mostraInfo } from './info.js';
 
 const contenuto = document.getElementById('contenuto');
 
@@ -30,6 +31,7 @@ function wireNav() {
     tab.onclick = () => mostraSezione(tab.dataset.sezione);
   });
 
+  document.getElementById('btn-info').onclick = () => mostraInfo();
   document.getElementById('btn-esporta').onclick = () => esportaDati();
   document.getElementById('btn-esporta-parziale').onclick = () => esportaParziale();
   document.getElementById('btn-ripristina').onclick = () =>

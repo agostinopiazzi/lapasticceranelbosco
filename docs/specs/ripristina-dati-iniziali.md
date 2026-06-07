@@ -1,4 +1,4 @@
-# Feature: Ripristina dati iniziali (svuota e ricarica il seed)
+# Feature: Ripristina dati di esempio (svuota e ricarica il seed)
 
 ## Obiettivo
 Permettere all'utente di **azzerare** i propri dati locali (ingredienti e ricette) e **ricaricare il
@@ -6,7 +6,7 @@ ricettario di esempio** iniziale (`seed.json`), con una conferma esplicita e la 
 esportare prima un backup di sicurezza.
 
 ## Comportamento
-1. In alto è presente un pulsante **"Ripristina dati iniziali"**.
+1. In alto è presente un pulsante **"Ripristina dati di esempio"**.
 2. Al clic si apre una finestra di conferma che spiega chiaramente che l'operazione **cancella tutti
    i dati attuali** e ricarica i dati di esempio, ed è **irreversibile**.
 3. La finestra offre tre scelte:

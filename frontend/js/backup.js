@@ -283,7 +283,7 @@ export function ripristinaDatiIniziali(onDone) {
   overlay.className = 'form-overlay';
   overlay.innerHTML = `
     <div class="form-box">
-      <h3>Ripristina dati iniziali</h3>
+      <h3>Ripristina dati di esempio</h3>
       <p>Questa operazione <strong>cancella tutte le tue ricette e i tuoi ingredienti</strong>
       e ricarica il ricettario di esempio. <strong>Non è reversibile.</strong></p>
       <p>Per sicurezza puoi prima esportare un backup dei dati attuali.</p>

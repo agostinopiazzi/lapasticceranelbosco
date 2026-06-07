@@ -95,13 +95,13 @@ function openForm(container, ing) {
         <input name="nome" required value="">
       </label>
       <label>Unità di misura
-        <input name="unita_misura" list="unita-list" value="">
+        <input name="unita_misura" list="unita-list" value="" required>
         <datalist id="unita-list">
           ${UNITA.map((u) => `<option value="${u}">`).join('')}
         </datalist>
       </label>
       <label>Categoria
-        <input name="categoria" value="">
+        <input name="categoria" value="" required>
       </label>
       <div class="form-actions">
         <button type="button" class="annulla">Annulla</button>
@@ -125,7 +125,8 @@ function openForm(container, ing) {
       unita_misura: form.querySelector('[name=unita_misura]').value.trim(),
       categoria: form.querySelector('[name=categoria]').value.trim(),
     };
-    if (!data.nome) return;
+    // All three are mandatory and must match the data format (formato-file-json).
+    if (!data.nome || !data.unita_misura || !data.categoria) return;
 
     if (isEdit) {
       await db.ingredienti.update(ing.id, data);

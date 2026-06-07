@@ -2,6 +2,7 @@
 // The file carries a `versione` field so older formats can be migrated later.
 
 import { db, DATA_VERSION } from './db.js';
+import { validaFileDati } from './validazione.js';
 
 // Max length for the file name (without extension) before truncating, to stay
 // within file-system limits.
@@ -197,29 +198,46 @@ function selezionaRicette(ricette) {
   });
 }
 
-// Read a JSON file chosen by the user and replace the local data.
+// How many validation problems to list in the alert before summarising the rest.
+const MAX_ERRORI_MOSTRATI = 12;
+
+// Read a JSON file chosen by the user, validate it against the expected format
+// (import-validazione spec), and only then replace the local data. The user's
+// data is never touched unless the file is fully valid.
 export async function importaDati(file, onDone) {
   let dati;
   try {
     dati = JSON.parse(await file.text());
   } catch {
-    alert('Il file selezionato non è un JSON valido.');
-    return;
-  }
-
-  if (typeof dati !== 'object' || dati === null) {
-    alert('Formato del file non riconosciuto.');
-    return;
-  }
-  if (dati.versione !== DATA_VERSION) {
     alert(
-      `Versione del file non supportata: ${dati.versione} (attesa ${DATA_VERSION}).`
+      'Il file selezionato non è un file JSON valido. ' +
+        'Scegli un file .json esportato da questa app.'
     );
     return;
   }
 
-  const ingredienti = Array.isArray(dati.ingredienti) ? dati.ingredienti : [];
-  const ricette = Array.isArray(dati.ricette) ? dati.ricette : [];
+  // Structural validation: refuse a malformed file before clearing anything.
+  const errori = validaFileDati(dati);
+  if (errori.length > 0) {
+    const elenco = errori
+      .slice(0, MAX_ERRORI_MOSTRATI)
+      .map((e) => `• ${e}`)
+      .join('\n');
+    const extra =
+      errori.length > MAX_ERRORI_MOSTRATI
+        ? `\n…e altri ${errori.length - MAX_ERRORI_MOSTRATI} problema/i.`
+        : '';
+    alert(
+      `Impossibile importare il file: trovati ${errori.length} problema/i.\n` +
+        'I tuoi dati attuali NON sono stati modificati.\n\n' +
+        elenco +
+        extra
+    );
+    return;
+  }
+
+  // From here on the file is valid: these are guaranteed arrays.
+  const { ingredienti, ricette } = dati;
 
   const ok = confirm(
     `Importare ${ingredienti.length} ingredienti e ${ricette.length} ricette?\n\n` +
@@ -227,12 +245,22 @@ export async function importaDati(file, onDone) {
   );
   if (!ok) return;
 
-  await db.transaction('rw', db.ingredienti, db.ricette, async () => {
-    await db.ingredienti.clear();
-    await db.ricette.clear();
-    if (ingredienti.length) await db.ingredienti.bulkAdd(ingredienti);
-    if (ricette.length) await db.ricette.bulkAdd(ricette);
-  });
+  try {
+    await db.transaction('rw', db.ingredienti, db.ricette, async () => {
+      await db.ingredienti.clear();
+      await db.ricette.clear();
+      if (ingredienti.length) await db.ingredienti.bulkAdd(ingredienti);
+      if (ricette.length) await db.ricette.bulkAdd(ricette);
+    });
+  } catch {
+    // The transaction is atomic: on error nothing is committed, so the previous
+    // data stays intact. We just inform the user.
+    alert(
+      'Importazione non riuscita per un errore imprevisto durante il salvataggio. ' +
+        'I tuoi dati attuali non sono stati modificati.'
+    );
+    return;
+  }
 
   alert('Dati importati correttamente.');
   if (onDone) onDone();

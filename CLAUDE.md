@@ -123,10 +123,15 @@ Distinguere due livelli: **come** i dati sono memorizzati durante l'uso e **in c
 - L'export ha due modalità (vedi [export-parziale.md](docs/specs/export-parziale.md)):
   - **Esporta tutto**: tutti gli ingredienti (anche quelli non usati da alcuna ricetta) e tutte le ricette.
   - **Esporta selezione**: solo le ricette scelte dall'utente e i soli ingredienti referenziati da esse.
-- In entrambi i casi l'utente può scegliere il nome del file (vedi [nome-file-export.md](docs/specs/nome-file-export.md)). "Importa dati" ricarica un file qualsiasi. Nessun gergo tecnico.
+- In entrambi i casi l'utente può scegliere il nome del file (vedi [nome-file-export.md](docs/specs/nome-file-export.md)). Nessun gergo tecnico.
+- "Importa dati" **valida** il file prima di usarlo e rifiuta i file non conformi senza toccare i dati locali (vedi [import-validazione.md](docs/specs/import-validazione.md)).
 - Il file include un campo **`versione`**: permette di leggere correttamente file creati con strutture dati precedenti (migrazioni future).
 
-Struttura del file di export:
+> **Formato di riferimento univoco**: la struttura completa del file (campi, tipi, vincoli, schema
+> formale) è descritta in **[docs/formato-file-json.md](docs/formato-file-json.md)**. È la fonte
+> autorevole per il formato; tenerla allineata a [validazione.js](frontend/js/validazione.js).
+
+Struttura del file di export (riepilogo; dettaglio in [docs/formato-file-json.md](docs/formato-file-json.md)):
 
 ```json
 {
@@ -212,6 +217,7 @@ Stato delle feature:
 | [crea-da-ricetta-esistente.md](docs/specs/crea-da-ricetta-esistente.md) — crea una nuova ricetta partendo da una esistente (copia + ricalcolo porzioni) | ✅ Implementata |
 | [nome-file-export.md](docs/specs/nome-file-export.md) — scelta del nome del file `.json` in esportazione (nome predefinito con data, sanificazione caratteri, estensione forzata) | ✅ Implementata |
 | [export-parziale.md](docs/specs/export-parziale.md) — export totale (tutti gli ingredienti, anche orfani) ed export parziale (ricette selezionate + soli ingredienti referenziati) | ✅ Implementata |
+| [import-validazione.md](docs/specs/import-validazione.md) — validazione strutturale del file `.json` in importazione (formato corretto forzato, dati locali al sicuro) | ✅ Implementata |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 

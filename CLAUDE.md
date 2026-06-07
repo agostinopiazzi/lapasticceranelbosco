@@ -76,7 +76,7 @@ Conseguenze:
 - `id`
 - `nome`
 - `unita_misura` (es. g, ml, pz)
-- `categoria` (facoltativa)
+- `categoria`
 - note nutrizionali / proprietà
 
 ### Ricetta

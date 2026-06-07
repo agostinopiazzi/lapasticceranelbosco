@@ -1,0 +1,286 @@
+/* Simple, readable styling. UI texts in Italian. */
+
+:root {
+  --bg: #faf7f2;
+  --surface: #ffffff;
+  --border: #e3ddd2;
+  --text: #2c2823;
+  --muted: #7a7266;
+  --accent: #8a5a2b;
+  --accent-dark: #6f4720;
+  --danger: #b23b3b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* --- Top bar / navigation --- */
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.topbar h1 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--accent);
+}
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+.backup-azioni {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tab {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 0.4rem 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--muted);
+}
+.tab.attivo {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* --- Buttons --- */
+button {
+  font-size: 0.95rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+button:hover {
+  border-color: var(--accent);
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+button.primary:hover {
+  background: var(--accent-dark);
+}
+button.danger {
+  color: var(--danger);
+  border-color: #e6c4c4;
+}
+button.danger:hover {
+  border-color: var(--danger);
+}
+
+/* --- Main content --- */
+main {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 4rem;
+}
+.caricamento,
+.vuoto {
+  color: var(--muted);
+}
+.errore {
+  color: var(--danger);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+.section-header h2 {
+  margin: 0;
+}
+
+.filtro {
+  margin-bottom: 1rem;
+  color: var(--muted);
+}
+.filtro select {
+  padding: 0.3rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+/* --- Ingredient list --- */
+.categoria {
+  margin: 1.2rem 0 0.4rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+.riga {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+}
+.riga-nome {
+  flex: 1;
+}
+.riga-meta {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.azioni {
+  display: flex;
+  gap: 0.4rem;
+}
+
+/* --- Recipe cards --- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 0.8rem;
+}
+.card-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.card-top h3 {
+  margin: 0;
+}
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.5rem 0;
+}
+.chip {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+details summary {
+  cursor: pointer;
+  color: var(--accent);
+  margin: 0.3rem 0;
+}
+.ingredienti-list,
+.istruzioni-list {
+  margin: 0.4rem 0 0.6rem 1.2rem;
+}
+.mancante {
+  color: var(--danger);
+}
+.card .azioni {
+  margin-top: 0.5rem;
+}
+
+/* --- Forms (modal overlay) --- */
+.form-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+  z-index: 100;
+}
+.form-box {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 1.5rem;
+  width: 100%;
+  max-width: 440px;
+}
+.form-box-large {
+  max-width: 640px;
+}
+.form-box h3 {
+  margin-top: 0;
+}
+.form-box label {
+  display: block;
+  margin-bottom: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.form-box input,
+.form-box select {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+  color: var(--text);
+}
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin: 0 0 1rem;
+  padding: 0.75rem;
+}
+legend {
+  color: var(--accent);
+  font-size: 0.9rem;
+  padding: 0 0.4rem;
+}
+.riga-form {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.4rem;
+}
+.riga-form select {
+  flex: 1;
+}
+.riga-form .qta {
+  width: 80px;
+}
+.riga-form .um {
+  width: 80px;
+}
+.riga-form .step {
+  flex: 1;
+}
+.riga-form .rimuovi {
+  flex: 0 0 auto;
+  color: var(--danger);
+}
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}

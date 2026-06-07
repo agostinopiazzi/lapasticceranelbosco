@@ -1,0 +1,422 @@
+{
+  "versione": 1,
+  "ingredienti": [
+    {
+      "id": "ing_001",
+      "nome": "Farina 180W",
+      "unita_misura": "g",
+      "categoria": "farine"
+    },
+    {
+      "id": "ing_002",
+      "nome": "Farina Croissant",
+      "unita_misura": "g",
+      "categoria": "farine"
+    },
+    {
+      "id": "ing_003",
+      "nome": "Farina 00",
+      "unita_misura": "g",
+      "categoria": "farine"
+    },
+    {
+      "id": "ing_004",
+      "nome": "Burro di Latteria Corman 82% mg - blocchi",
+      "unita_misura": "g",
+      "categoria": "grassi"
+    },
+    {
+      "id": "ing_005",
+      "nome": "Burro Tradizionale Corman 82% mg - blocchi",
+      "unita_misura": "g",
+      "categoria": "grassi"
+    },
+    {
+      "id": "ing_006",
+      "nome": "Burro Latteria Corman 82% mg - placche",
+      "unita_misura": "g",
+      "categoria": "grassi"
+    },
+    {
+      "id": "ing_007",
+      "nome": "Zucchero semolato",
+      "unita_misura": "g",
+      "categoria": "zuccheri"
+    },
+    {
+      "id": "ing_008",
+      "nome": "Zucchero di canna",
+      "unita_misura": "g",
+      "categoria": "zuccheri"
+    },
+    {
+      "id": "ing_009",
+      "nome": "Zucchero",
+      "unita_misura": "g",
+      "categoria": "zuccheri"
+    },
+    {
+      "id": "ing_010",
+      "nome": "Te Earl Grey",
+      "unita_misura": "g",
+      "categoria": "aromi"
+    },
+    {
+      "id": "ing_011",
+      "nome": "Scorza di limone",
+      "unita_misura": "g",
+      "categoria": "aromi"
+    },
+    {
+      "id": "ing_012",
+      "nome": "Sale rosso delle Hawaii",
+      "unita_misura": "g",
+      "categoria": "sali"
+    },
+    {
+      "id": "ing_013",
+      "nome": "Sale",
+      "unita_misura": "g",
+      "categoria": "sali"
+    },
+    {
+      "id": "ing_014",
+      "nome": "Baking (lievito chimico)",
+      "unita_misura": "g",
+      "categoria": "agenti lievitanti"
+    },
+    {
+      "id": "ing_015",
+      "nome": "Bicarbonato di sodio",
+      "unita_misura": "g",
+      "categoria": "agenti lievitanti"
+    },
+    {
+      "id": "ing_016",
+      "nome": "Cioccolato avorio 34%",
+      "unita_misura": "g",
+      "categoria": "cioccolato"
+    },
+    {
+      "id": "ing_017",
+      "nome": "Latte",
+      "unita_misura": "g",
+      "categoria": "latticini"
+    },
+    {
+      "id": "ing_018",
+      "nome": "Acqua",
+      "unita_misura": "g",
+      "categoria": "liquidi"
+    },
+    {
+      "id": "ing_019",
+      "nome": "Lievito compresso osmotollerante",
+      "unita_misura": "g",
+      "categoria": "agenti lievitanti"
+    },
+    {
+      "id": "ing_020",
+      "nome": "Miele",
+      "unita_misura": "g",
+      "categoria": "zuccheri"
+    },
+    {
+      "id": "ing_021",
+      "nome": "LB (lievito)",
+      "unita_misura": "g",
+      "categoria": "agenti lievitanti"
+    },
+    {
+      "id": "ing_022",
+      "nome": "Sciroppo da lucidatura",
+      "unita_misura": "q.b.",
+      "categoria": "finiture"
+    },
+    {
+      "id": "ing_023",
+      "nome": "Pasta croissant",
+      "unita_misura": "g",
+      "categoria": "preparazioni base"
+    },
+    {
+      "id": "ing_024",
+      "nome": "Cacao 22-24%",
+      "unita_misura": "g",
+      "categoria": "cioccolato"
+    },
+    {
+      "id": "ing_025",
+      "nome": "Pepe",
+      "unita_misura": "g",
+      "categoria": "spezie"
+    },
+    {
+      "id": "ing_026",
+      "nome": "Patata liofilizzata",
+      "unita_misura": "g",
+      "categoria": "altro"
+    },
+    {
+      "id": "ing_027",
+      "nome": "Tuorlo",
+      "unita_misura": "g",
+      "categoria": "uova"
+    },
+    {
+      "id": "ing_028",
+      "nome": "Senape originale Digione",
+      "unita_misura": "g",
+      "categoria": "condimenti"
+    },
+    {
+      "id": "ing_029",
+      "nome": "French Cream cheese Elle&Vire",
+      "unita_misura": "g",
+      "categoria": "latticini"
+    }
+  ],
+  "ricette": [
+    {
+      "id": "ric_001",
+      "nome": "Frollino Earl Grey",
+      "porzioni_base": 1,
+      "ingredienti": [
+        {
+          "ingrediente_id": "ing_010",
+          "quantita": 25,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_011",
+          "quantita": 15,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_012",
+          "quantita": 7,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_007",
+          "quantita": 40,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_004",
+          "quantita": 350,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_008",
+          "quantita": 160,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_014",
+          "quantita": 3,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_015",
+          "quantita": 2,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_001",
+          "quantita": 575,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_016",
+          "quantita": 200,
+          "unita_misura": "g"
+        }
+      ],
+      "istruzioni": [
+        "Procedimento non presente nella fonte: da completare."
+      ],
+      "tag": [
+        "frolla",
+        "biscotti"
+      ]
+    },
+    {
+      "id": "ric_002",
+      "nome": "Impasto Croissant",
+      "porzioni_base": 1,
+      "ingredienti": [
+        {
+          "ingrediente_id": "ing_002",
+          "quantita": 1870,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_021",
+          "quantita": 45,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_017",
+          "quantita": 968,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_018",
+          "quantita": 60,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_019",
+          "quantita": 30,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_009",
+          "quantita": 214,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_020",
+          "quantita": 44,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_005",
+          "quantita": 224,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_013",
+          "quantita": 44,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_006",
+          "quantita": 1000,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_022",
+          "quantita": null,
+          "unita_misura": "q.b."
+        }
+      ],
+      "istruzioni": [
+        "Impastare la farina con il latte e il lievito compresso fino a ottenere un impasto omogeneo.",
+        "Unire zucchero e miele e impastare di nuovo fino a maglia ben formata; unire infine burro e sale.",
+        "Far puntare a 24-26 gradi fino a 1,5 volte il volume iniziale.",
+        "Sgasare, tenere da parte 440 g di impasto e dare al resto una piega a 3 a vuoto, allargando a 40x60 cm.",
+        "Abbattere a -5 gradi e far maturare 12 ore tra -3 e 0 gradi.",
+        "Piegare l'impasto con il burro: una piega da 3 e una da 4.",
+        "Inumidire la superficie e adagiare il pezzo da 440 g steso in rettangolo delle stesse dimensioni.",
+        "Riposo a 0 gradi almeno 30 minuti (meglio un paio di ore).",
+        "Stendere a 3,5 mm, ritagliare triangoli isosceli altezza 28 cm e base 8 cm e arrotolare.",
+        "Lievitare su tappetini microforati 60x40 a 28 gradi per circa 3 ore.",
+        "Cuocere in forno ventilato a 175 gradi per circa 18 minuti."
+      ],
+      "tag": [
+        "lievitati",
+        "viennoiserie",
+        "base"
+      ]
+    },
+    {
+      "id": "ric_003",
+      "nome": "Impasto al cacao",
+      "porzioni_base": 1,
+      "ingredienti": [
+        {
+          "ingrediente_id": "ing_023",
+          "quantita": 176,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_024",
+          "quantita": 22,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_018",
+          "quantita": 22,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_005",
+          "quantita": 9,
+          "unita_misura": "g"
+        }
+      ],
+      "istruzioni": [
+        "Prelevare 176 g di impasto croissant a fine impastamento.",
+        "Unire cacao, acqua e burro e lavorare fino a impasto perfettamente omogeneo."
+      ],
+      "tag": [
+        "base",
+        "viennoiserie"
+      ]
+    },
+    {
+      "id": "ric_004",
+      "nome": "Crema alla senape da cottura",
+      "porzioni_base": 1,
+      "ingredienti": [
+        {
+          "ingrediente_id": "ing_003",
+          "quantita": 24,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_005",
+          "quantita": 24,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_017",
+          "quantita": 240,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_013",
+          "quantita": 1,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_025",
+          "quantita": 1,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_026",
+          "quantita": 20,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_027",
+          "quantita": 24,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_028",
+          "quantita": 130,
+          "unita_misura": "g"
+        },
+        {
+          "ingrediente_id": "ing_029",
+          "quantita": 300,
+          "unita_misura": "g"
+        }
+      ],
+      "istruzioni": [
+        "Fare un roux con burro e farina.",
+        "Aggiungere il latte e cuocere come una besciamella.",
+        "Unire tutti gli altri ingredienti a fine cottura ed emulsionare fino a crema liscia."
+      ],
+      "tag": [
+        "crema",
+        "salato",
+        "farcitura"
+      ]
+    }
+  ]
+}

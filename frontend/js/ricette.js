@@ -4,6 +4,8 @@ import { db, nuovaRicettaId } from './db.js';
 import { scalaQuantita } from './calcoli.js';
 
 let filtroTag = ''; // '' = tutti
+let filtroAutore = ''; // '' = tutti
+let ricercaTesto = ''; // free-text search over name + contents
 
 // Render the whole "Ricette" section into `container`.
 export async function renderRicette(container) {
@@ -19,23 +21,77 @@ export async function renderRicette(container) {
   addBtn.onclick = () => nuovaRicetta(container);
   header.append(title, addBtn);
 
-  // Tag filter (uses the multi-entry `*tag` index, §5b).
   const filtro = document.createElement('div');
   filtro.className = 'filtro';
-  const lab = document.createElement('label');
-  lab.textContent = 'Filtra per tag: ';
-  const sel = document.createElement('select');
-  const tutti = await tuttiITag();
-  sel.innerHTML =
-    `<option value="">Tutte</option>` +
-    tutti.map((t) => `<option value="${escapeText(t)}">${escapeText(t)}</option>`).join('');
-  sel.value = filtroTag;
-  sel.onchange = async () => {
-    filtroTag = sel.value;
+
+  // Free-text search over name and contents (re-renders only the list, so the
+  // input keeps focus while typing).
+  const cerca = document.createElement('input');
+  cerca.type = 'search';
+  cerca.className = 'cerca';
+  cerca.placeholder = 'Cerca per nome o contenuto…';
+  cerca.autocomplete = 'off';
+  cerca.value = ricercaTesto;
+
+  // Re-render the list and refresh the "clear filters" button state after any
+  // filter change (renderLista alone doesn't touch the button).
+  const applica = async () => {
+    btnClear.disabled = !(ricercaTesto || filtroTag || filtroAutore);
     await renderLista(list, container);
   };
-  lab.append(sel);
-  filtro.append(lab);
+
+  cerca.oninput = async () => {
+    ricercaTesto = cerca.value;
+    await applica();
+  };
+
+  // Tag + author dropdowns.
+  const [tags, autori] = await Promise.all([tuttiITag(), tuttiGliAutori()]);
+
+  const selTags = document.createElement('div');
+  selTags.className = 'filtri-select';
+
+  const labTag = document.createElement('label');
+  labTag.textContent = 'Tag: ';
+  const selTag = document.createElement('select');
+  selTag.innerHTML =
+    `<option value="">Tutti</option>` +
+    tags.map((t) => `<option value="${escapeText(t)}">${escapeText(t)}</option>`).join('');
+  selTag.value = filtroTag;
+  selTag.onchange = async () => {
+    filtroTag = selTag.value;
+    await applica();
+  };
+  labTag.append(selTag);
+
+  const labAutore = document.createElement('label');
+  labAutore.textContent = 'Autore: ';
+  const selAutore = document.createElement('select');
+  selAutore.innerHTML =
+    `<option value="">Tutti</option>` +
+    autori.map((a) => `<option value="${escapeText(a)}">${escapeText(a)}</option>`).join('');
+  selAutore.value = filtroAutore;
+  selAutore.onchange = async () => {
+    filtroAutore = selAutore.value;
+    await applica();
+  };
+  labAutore.append(selAutore);
+
+  // Clear all filters at once; disabled when nothing is active.
+  const btnClear = document.createElement('button');
+  btnClear.type = 'button';
+  btnClear.className = 'cancella-filtri';
+  btnClear.textContent = 'Cancella filtri';
+  btnClear.disabled = !(ricercaTesto || filtroTag || filtroAutore);
+  btnClear.onclick = async () => {
+    ricercaTesto = '';
+    filtroTag = '';
+    filtroAutore = '';
+    await renderRicette(container);
+  };
+
+  selTags.append(labTag, labAutore, btnClear);
+  filtro.append(cerca, selTags);
 
   const list = document.createElement('div');
   list.className = 'lista';
@@ -52,25 +108,59 @@ async function tuttiITag() {
   return [...set].sort();
 }
 
+// Distinct sorted list of all authors across recipes (skips empty ones).
+async function tuttiGliAutori() {
+  const all = await db.ricette.toArray();
+  const set = new Set();
+  for (const r of all) if (r.autore) set.add(r.autore);
+  return [...set].sort();
+}
+
+// Lowercased searchable text for a recipe: name + author + tags + instructions
+// + the names of its ingredients (resolved via `ingMap`).
+function testoRicercabile(r, ingMap) {
+  const parti = [r.nome || '', r.autore || ''];
+  for (const t of r.tag || []) parti.push(t);
+  for (const passo of r.istruzioni || []) parti.push(passo);
+  for (const riga of r.ingredienti || []) {
+    const ing = ingMap.get(riga.ingrediente_id);
+    if (ing && ing.nome) parti.push(ing.nome);
+  }
+  return parti.join(' ').toLowerCase();
+}
+
 async function renderLista(list, container) {
   list.innerHTML = '';
 
-  const ricette = filtroTag
-    ? await db.ricette.where('tag').equals(filtroTag).sortBy('nome')
-    : await db.ricette.orderBy('nome').toArray();
+  const tutte = await db.ricette.orderBy('nome').toArray();
 
-  if (ricette.length === 0) {
+  if (tutte.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'vuoto';
-    empty.textContent = filtroTag
-      ? 'Nessuna ricetta con questo tag.'
-      : 'Nessuna ricetta. Aggiungine una con "+ Nuova ricetta".';
+    empty.textContent = 'Nessuna ricetta. Aggiungine una con "+ Nuova ricetta".';
     list.append(empty);
     return;
   }
 
-  // Resolve ingredient names for display.
+  // Resolve ingredient names (used both for display and for content search).
   const ingMap = new Map((await db.ingredienti.toArray()).map((i) => [i.id, i]));
+
+  // Apply tag + author + text filters together (AND).
+  const q = ricercaTesto.trim().toLowerCase();
+  const ricette = tutte.filter((r) => {
+    if (filtroTag && !(r.tag || []).includes(filtroTag)) return false;
+    if (filtroAutore && r.autore !== filtroAutore) return false;
+    if (q && !testoRicercabile(r, ingMap).includes(q)) return false;
+    return true;
+  });
+
+  if (ricette.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'vuoto';
+    empty.textContent = 'Nessuna ricetta corrisponde ai filtri.';
+    list.append(empty);
+    return;
+  }
 
   for (const r of ricette) {
     const card = document.createElement('div');

@@ -126,6 +126,15 @@ main {
   border-radius: 6px;
   border: 1px solid var(--border);
 }
+.filtri-select {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+.cancella-filtri:not(:disabled) {
+  color: var(--accent);
+}
 
 /* --- Ingredient list --- */
 .categoria {

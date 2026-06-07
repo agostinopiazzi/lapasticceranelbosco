@@ -7,14 +7,14 @@ import { db, DATA_VERSION } from './db.js';
 // within file-system limits.
 const MAX_NOME_FILE = 100;
 
-// Default export name: ricettario-AAAA-MM-GG.json (today's date) so successive
+// Default export name: <base>-AAAA-MM-GG.json (today's date) so successive
 // backups don't overwrite each other (nome-file-export spec).
-export function nomeFilePredefinito() {
+export function nomeFilePredefinito(base = 'ricettario') {
   const oggi = new Date();
   const aaaa = oggi.getFullYear();
   const mm = String(oggi.getMonth() + 1).padStart(2, '0');
   const gg = String(oggi.getDate()).padStart(2, '0');
-  return `ricettario-${aaaa}-${mm}-${gg}.json`;
+  return `${base}-${aaaa}-${mm}-${gg}.json`;
 }
 
 // Turn whatever the user typed into a safe .json file name. Falls back to the
@@ -36,27 +36,17 @@ export function normalizzaNomeFile(input) {
   return `${nome}.json`;
 }
 
-// Build the export object and trigger a download.
-// The user can choose the file name (nome-file-export spec); the default is
-// pre-filled so non-technical users can simply confirm.
-export async function esportaDati() {
-  const [ingredienti, ricette] = await Promise.all([
-    db.ingredienti.toArray(),
-    db.ricette.toArray(),
-  ]);
-
-  const scelta = prompt(
-    'Nome del file da scaricare:',
-    nomeFilePredefinito()
-  );
-  if (scelta === null) return; // user cancelled the export
+// Ask the user for a file name (default pre-filled) and download `payload` as a
+// JSON file. Returns false if the user cancels the name prompt. Shared by the
+// total and partial export (export-parziale spec).
+function scaricaPayload(payload, nomePredefinito) {
+  const scelta = prompt('Nome del file da scaricare:', nomePredefinito);
+  if (scelta === null) return false; // user cancelled the export
   const nomeFile = normalizzaNomeFile(scelta);
 
-  const payload = { versione: DATA_VERSION, ingredienti, ricette };
   const blob = new Blob([JSON.stringify(payload, null, 2)], {
     type: 'application/json',
   });
-
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
@@ -65,6 +55,146 @@ export async function esportaDati() {
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+  return true;
+}
+
+// Total export: every ingredient (including ones used by no recipe) and every
+// recipe. The user can choose the file name (nome-file-export spec).
+export async function esportaDati() {
+  const [ingredienti, ricette] = await Promise.all([
+    db.ingredienti.toArray(),
+    db.ricette.toArray(),
+  ]);
+
+  const payload = { versione: DATA_VERSION, ingredienti, ricette };
+  scaricaPayload(payload, nomeFilePredefinito());
+}
+
+// Partial export: the user picks which recipes to export; the file then carries
+// only those recipes and only the ingredients they reference (export-parziale
+// spec). Selection happens in an overlay built by `selezionaRicette`.
+export async function esportaParziale() {
+  const ricette = await db.ricette.orderBy('nome').toArray();
+  if (ricette.length === 0) {
+    alert('Non ci sono ricette da esportare.');
+    return;
+  }
+
+  const scelte = await selezionaRicette(ricette);
+  if (!scelte || scelte.length === 0) return; // cancelled or nothing selected
+
+  // Collect the ingredient ids referenced by the chosen recipes, then keep only
+  // the ingredients that actually exist in the database.
+  const idUsati = new Set();
+  for (const r of scelte) {
+    for (const riga of r.ingredienti || []) {
+      if (riga.ingrediente_id) idUsati.add(riga.ingrediente_id);
+    }
+  }
+  const tuttiIngredienti = await db.ingredienti.toArray();
+  const ingredienti = tuttiIngredienti.filter((i) => idUsati.has(i.id));
+
+  const payload = { versione: DATA_VERSION, ingredienti, ricette: scelte };
+  scaricaPayload(payload, nomeFilePredefinito('ricettario-parziale'));
+}
+
+// Overlay that lets the user tick which recipes to export, with search and
+// select-all. Resolves to the array of chosen recipe objects, or null if the
+// user cancels.
+function selezionaRicette(ricette) {
+  return new Promise((resolve) => {
+    const selezionati = new Set();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'form-overlay';
+    overlay.innerHTML = `
+      <div class="form-box form-box-large">
+        <h3>Scegli le ricette da esportare</h3>
+        <input class="cerca" type="search" placeholder="Cerca per nome…" autocomplete="off">
+        <div class="seleziona-tutte">
+          <button type="button" class="tutte">Seleziona tutte</button>
+          <button type="button" class="nessuna">Deseleziona tutte</button>
+        </div>
+        <div class="lista-scelta"></div>
+        <div class="form-actions">
+          <span class="conteggio riga-meta"></span>
+          <button type="button" class="annulla">Annulla</button>
+          <button type="button" class="primary esporta" disabled>Esporta selezione</button>
+        </div>
+      </div>
+    `;
+
+    const lista = overlay.querySelector('.lista-scelta');
+    const cerca = overlay.querySelector('.cerca');
+    const conteggio = overlay.querySelector('.conteggio');
+    const btnEsporta = overlay.querySelector('.esporta');
+
+    function aggiornaStato() {
+      const n = selezionati.size;
+      conteggio.textContent = n === 0 ? 'Nessuna selezionata' : `${n} selezionata/e`;
+      btnEsporta.disabled = n === 0;
+    }
+
+    function render(filtro = '') {
+      const q = filtro.trim().toLowerCase();
+      const filtrate = q
+        ? ricette.filter((r) => r.nome.toLowerCase().includes(q))
+        : ricette;
+      lista.innerHTML = '';
+      if (filtrate.length === 0) {
+        const p = document.createElement('p');
+        p.className = 'vuoto';
+        p.textContent = 'Nessuna ricetta trovata.';
+        lista.append(p);
+        return;
+      }
+      for (const r of filtrate) {
+        const label = document.createElement('label');
+        label.className = 'voce-checkbox';
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = selezionati.has(r.id);
+        cb.onchange = () => {
+          if (cb.checked) selezionati.add(r.id);
+          else selezionati.delete(r.id);
+          aggiornaStato();
+        };
+        const nome = document.createElement('span');
+        nome.className = 'voce-nome';
+        nome.textContent = r.nome;
+        const meta = document.createElement('span');
+        meta.className = 'riga-meta';
+        meta.textContent = `${r.porzioni_base || 1} porzione/i`;
+        label.append(cb, nome, meta);
+        lista.append(label);
+      }
+    }
+
+    cerca.oninput = () => render(cerca.value);
+    overlay.querySelector('.tutte').onclick = () => {
+      for (const r of ricette) selezionati.add(r.id);
+      render(cerca.value);
+      aggiornaStato();
+    };
+    overlay.querySelector('.nessuna').onclick = () => {
+      selezionati.clear();
+      render(cerca.value);
+      aggiornaStato();
+    };
+    overlay.querySelector('.annulla').onclick = () => {
+      overlay.remove();
+      resolve(null);
+    };
+    btnEsporta.onclick = () => {
+      overlay.remove();
+      resolve(ricette.filter((r) => selezionati.has(r.id)));
+    };
+
+    render();
+    aggiornaStato();
+    document.body.append(overlay);
+    cerca.focus();
+  });
 }
 
 // Read a JSON file chosen by the user and replace the local data.

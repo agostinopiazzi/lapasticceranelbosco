@@ -56,6 +56,15 @@ Conseguenze:
 - Serve un server sempre attivo (per auth + servire l'app). Internet necessario al login e al caricamento; l'uso quotidiano può funzionare offline solo per le parti già caricate (valutare in seguito).
 - Funzione di **export/import** dei dati locali (file JSON) necessaria per backup e cambio dispositivo.
 
+> **Stato attuale del deployment (senza autenticazione).** Per ora l'app è pubblicata
+> come sito statico su **GitHub Pages** tramite il workflow [.github/workflows/pages.yml](.github/workflows/pages.yml),
+> che pubblica la sola cartella `frontend/`. In questa configurazione il **backend Python non è
+> usato**: l'app gira interamente lato browser (IndexedDB) e nessun dato dell'utente lascia il
+> dispositivo. L'**accesso riservato (§4) non è attivo**: chiunque abbia il link vede l'app (i dati
+> restano comunque locali a ciascun browser). Quando servirà l'autenticazione si rivaluterà
+> l'hosting (vedi §9.1 e §9.5): auth gestita esterna → si può restare su Pages; backend proprio →
+> serve un host che esegua Python.
+
 ---
 
 ## 4. Autenticazione (accesso riservato)
@@ -110,8 +119,11 @@ Distinguere due livelli: **come** i dati sono memorizzati durante l'uso e **in c
 > dispositivo/browser o svuota i dati di navigazione, li perde. Per questo l'export/import è essenziale.
 
 ### Backup e portabilità: file JSON unico
-- Funzioni **Esporta dati** / **Importa dati** che producono/leggono **un singolo file `.json`** contenente ingredienti + ricette.
-- Esperienza utente: "Esporta dati" → scarica un file; "Importa dati" → lo ricarica. Nessun gergo tecnico.
+- Funzioni **Esporta** / **Importa** che producono/leggono **un singolo file `.json`** contenente ingredienti + ricette.
+- L'export ha due modalità (vedi [export-parziale.md](docs/specs/export-parziale.md)):
+  - **Esporta tutto**: tutti gli ingredienti (anche quelli non usati da alcuna ricetta) e tutte le ricette.
+  - **Esporta selezione**: solo le ricette scelte dall'utente e i soli ingredienti referenziati da esse.
+- In entrambi i casi l'utente può scegliere il nome del file (vedi [nome-file-export.md](docs/specs/nome-file-export.md)). "Importa dati" ricarica un file qualsiasi. Nessun gergo tecnico.
 - Il file include un campo **`versione`**: permette di leggere correttamente file creati con strutture dati precedenti (migrazioni future).
 
 Struttura del file di export:
@@ -165,9 +177,10 @@ Il generatore produce una o più ricette **a partire dalle indicazioni dell'uten
 
 - **Backend**: Python con **FastAPI** (leggero, moderno, adatto a servire API + file statici).
 - **Frontend**: HTML/CSS/JavaScript. Valutare un framework leggero solo se serve; priorità alla semplicità d'uso.
-- **Persistenza locale**: IndexedDB (lato browser), eventualmente tramite libreria Dexie.js (vedi §5b).
-- **Auth**: servizio gestito o modulo dedicato del backend (vedi §4).
+- **Persistenza locale**: IndexedDB (lato browser) tramite libreria **Dexie.js** (vedi §5b). Dexie è **incluso localmente** in [frontend/vendor/dexie.min.js](frontend/vendor/dexie.min.js) (v4.4.3), non caricato da CDN: nessuna richiesta a terze parti.
+- **Auth**: servizio gestito o modulo dedicato del backend (vedi §4). **Non ancora attiva** (vedi nota deployment in §3).
 - **Export/Import dati**: singolo file JSON con campo `versione` (vedi §5b).
+- **Deployment**: GitHub Pages (sola cartella `frontend/`) via GitHub Actions, vedi §3.
 
 ---
 
@@ -198,6 +211,7 @@ Stato delle feature:
 |---|---|
 | [crea-da-ricetta-esistente.md](docs/specs/crea-da-ricetta-esistente.md) — crea una nuova ricetta partendo da una esistente (copia + ricalcolo porzioni) | ✅ Implementata |
 | [nome-file-export.md](docs/specs/nome-file-export.md) — scelta del nome del file `.json` in esportazione (nome predefinito con data, sanificazione caratteri, estensione forzata) | ✅ Implementata |
+| [export-parziale.md](docs/specs/export-parziale.md) — export totale (tutti gli ingredienti, anche orfani) ed export parziale (ricette selezionate + soli ingredienti referenziati) | ✅ Implementata |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 
@@ -209,7 +223,7 @@ Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implement
 2. **Indicazioni del generatore**: quali parametri può fornire l'utente e come vengono combinati?
 3. **Funzionamento offline**: serve che l'app funzioni offline dopo il primo caricamento (PWA), o basta l'accesso via URL con internet?
 4. **Dati iniziali**: ogni utente parte da un ricettario vuoto, oppure fornisci un set di ricette/ingredienti di base al primo avvio?
-5. **Hosting**: dove gira il backend (servizio cloud gratuito/economico, server proprio)?
+5. **Hosting**: ~~dove gira il backend~~ → **Deciso (provvisorio)**: per ora deploy statico su **GitHub Pages** senza backend né autenticazione (vedi nota in §3). Da rivalutare quando si introdurrà l'auth.
 
 ---
 

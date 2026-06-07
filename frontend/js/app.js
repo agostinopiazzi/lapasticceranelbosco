@@ -3,7 +3,7 @@
 import { seedIfEmpty } from './db.js';
 import { renderIngredienti } from './ingredienti.js';
 import { renderRicette } from './ricette.js';
-import { esportaDati, importaDati } from './backup.js';
+import { esportaDati, esportaParziale, importaDati } from './backup.js';
 
 const contenuto = document.getElementById('contenuto');
 
@@ -26,6 +26,7 @@ function wireNav() {
   });
 
   document.getElementById('btn-esporta').onclick = () => esportaDati();
+  document.getElementById('btn-esporta-parziale').onclick = () => esportaParziale();
 
   const fileInput = document.getElementById('file-importa');
   document.getElementById('btn-importa').onclick = () => fileInput.click();

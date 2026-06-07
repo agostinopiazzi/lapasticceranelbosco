@@ -1,4 +1,4 @@
-// IndexedDB layer (via Dexie.js, loaded as a global from the CDN in index.html).
+// IndexedDB layer (via Dexie.js, loaded as a global from ./vendor in index.html).
 // Two object stores per CLAUDE.md §5/§5b: `ingredienti` and `ricette`.
 // User data lives only here, in the browser. Nothing is sent to the server.
 

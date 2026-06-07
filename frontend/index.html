@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ricettario</title>
     <link rel="stylesheet" href="./css/style.css" />
-    <!-- Dexie.js from CDN (no build step) -->
-    <script src="https://unpkg.com/dexie@4/dist/dexie.min.js"></script>
+    <!-- Dexie.js bundled locally (no CDN, no third-party request) -->
+    <script src="./vendor/dexie.min.js"></script>
   </head>
   <body>
     <header class="topbar">
@@ -16,7 +16,8 @@
         <button data-sezione="ricette" class="tab">Ricette</button>
       </nav>
       <div class="backup-azioni">
-        <button id="btn-esporta">Esporta dati</button>
+        <button id="btn-esporta">Esporta tutto</button>
+        <button id="btn-esporta-parziale">Esporta selezione</button>
         <button id="btn-importa">Importa dati</button>
         <input id="file-importa" type="file" accept="application/json,.json" hidden />
       </div>

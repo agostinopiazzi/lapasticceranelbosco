@@ -1,0 +1,35 @@
+# Publish the static frontend/ folder to GitHub Pages.
+# The Python backend is NOT deployed here: on Pages the app runs fully
+# client-side (IndexedDB), see CLAUDE.md §3 / docs/specs.
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # allow manual runs from the Actions tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let one deploy finish before starting another; don't pile up runs.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          # Only the app itself is published — not the repo root, backend, or specs.
+          path: frontend
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -5,6 +5,8 @@ import { db, nuovoIngredienteId } from './db.js';
 // Common units of measure offered in the form (free text also allowed).
 const UNITA = ['g', 'ml', 'pz', 'q.b.'];
 
+let filtroIngredienti = ''; // search query, matched against nome OR categoria
+
 // Render the whole "Ingredienti" section into `container`.
 export async function renderIngredienti(container) {
   container.innerHTML = '';
@@ -19,22 +21,56 @@ export async function renderIngredienti(container) {
   addBtn.onclick = () => openForm(container);
   header.append(title, addBtn);
 
+  // Search box: filters the list by ingredient name or category (re-renders only
+  // the list, so the input keeps focus while typing).
+  const filtro = document.createElement('div');
+  filtro.className = 'filtro';
+  const cerca = document.createElement('input');
+  cerca.type = 'search';
+  cerca.className = 'cerca';
+  cerca.placeholder = 'Cerca per nome o categoria…';
+  cerca.autocomplete = 'off';
+  cerca.value = filtroIngredienti;
+  cerca.oninput = async () => {
+    filtroIngredienti = cerca.value;
+    await renderLista(list, container);
+  };
+  filtro.append(cerca);
+
   const list = document.createElement('div');
   list.className = 'lista';
 
-  container.append(header, list);
+  container.append(header, filtro, list);
   await renderLista(list, container);
 }
 
 // Build the grouped-by-category list.
 async function renderLista(list, container) {
   list.innerHTML = '';
-  const items = await db.ingredienti.orderBy('nome').toArray();
+  const tutti = await db.ingredienti.orderBy('nome').toArray();
+
+  if (tutti.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'vuoto';
+    empty.textContent = 'Nessun ingrediente. Aggiungine uno con "+ Nuovo ingrediente".';
+    list.append(empty);
+    return;
+  }
+
+  // Filter by name OR category (case-insensitive substring).
+  const q = filtroIngredienti.trim().toLowerCase();
+  const items = q
+    ? tutti.filter(
+        (i) =>
+          (i.nome || '').toLowerCase().includes(q) ||
+          (i.categoria || '').toLowerCase().includes(q)
+      )
+    : tutti;
 
   if (items.length === 0) {
     const empty = document.createElement('p');
     empty.className = 'vuoto';
-    empty.textContent = 'Nessun ingrediente. Aggiungine uno con "+ Nuovo ingrediente".';
+    empty.textContent = 'Nessun ingrediente trovato per la ricerca.';
     list.append(empty);
     return;
   }

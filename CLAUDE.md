@@ -222,6 +222,7 @@ Stato delle feature:
 | [import-validazione.md](docs/specs/import-validazione.md) — validazione strutturale del file `.json` in importazione (formato corretto forzato, dati locali al sicuro) | ✅ Implementata |
 | [autore-ricetta.md](docs/specs/autore-ricetta.md) — campo `autore` obbligatorio sulle ricette (formato dati v2 + migrazione automatica dei file v1) | ✅ Implementata |
 | [ripristina-dati-iniziali.md](docs/specs/ripristina-dati-iniziali.md) — pulsante per svuotare i dati locali e ricaricare il seed, con conferma e backup opzionale | ✅ Implementata |
+| [ricerca-ingredienti.md](docs/specs/ricerca-ingredienti.md) — barra di ricerca ingredienti per nome o categoria | ✅ Implementata |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 

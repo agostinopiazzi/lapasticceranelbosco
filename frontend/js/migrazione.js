@@ -6,6 +6,7 @@
 // Each step is a small, explicit transformation (no AI).
 
 import { DATA_VERSION } from './versione.js';
+import { calcolaResaPredefinita } from './calcoli.js';
 
 // Author assigned to v1 recipes that predate the mandatory `autore` field.
 export const AUTORE_DEFAULT = 'Sconosciuto';
@@ -27,6 +28,33 @@ function migraV1aV2(dati) {
   return { ...dati, versione: 2, ricette };
 }
 
+// v2 → v3: every recipe gains a mandatory `resa` (yield). Recipes that don't
+// already declare a valid resa get a default derived from their ingredient
+// quantities (ricette-componibili spec). `mise_en_place` stays absent (it is
+// optional). Existing ingredient rows are untouched (all v2 rows are ingredient
+// rows).
+function haResaValida(r) {
+  return (
+    isObject(r.resa) &&
+    typeof r.resa.quantita === 'number' &&
+    Number.isFinite(r.resa.quantita) &&
+    typeof r.resa.unita_misura === 'string' &&
+    r.resa.unita_misura.trim() !== ''
+  );
+}
+
+function migraV2aV3(dati) {
+  const ricette = Array.isArray(dati.ricette)
+    ? dati.ricette.map((r) => {
+        if (!isObject(r)) return r; // leave malformed entries for the validator
+        return haResaValida(r)
+          ? r
+          : { ...r, resa: calcolaResaPredefinita(Array.isArray(r.ingredienti) ? r.ingredienti : []) };
+      })
+    : dati.ricette;
+  return { ...dati, versione: 3, ricette };
+}
+
 // Upgrade `dati` to the current version when possible. Unknown or already-current
 // versions are returned unchanged; structurally invalid input is left to the
 // validator. Returns `{ dati, migrato }` where `migrato` is true if anything was
@@ -42,7 +70,12 @@ export function migraDati(dati) {
     migrato = true;
   }
 
-  // Hook point for future steps (v2 → v3, …) before reaching DATA_VERSION.
+  if (corrente.versione === 2) {
+    corrente = migraV2aV3(corrente);
+    migrato = true;
+  }
+
+  // Hook point for future steps (v3 → v4, …) before reaching DATA_VERSION.
 
   return { dati: corrente, migrato: migrato && corrente.versione === DATA_VERSION };
 }

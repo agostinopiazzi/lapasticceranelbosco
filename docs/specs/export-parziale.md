@@ -27,9 +27,14 @@ Entrambi gli export riutilizzano la scelta del nome file (vedi [nome-file-export
   - contatore delle ricette selezionate;
   - pulsante **"Esporta selezione"** attivo solo con almeno una ricetta selezionata, più **"Annulla"**.
 - Alla conferma:
-  1. si raccolgono gli `ingrediente_id` citati nelle righe delle ricette selezionate;
-  2. si includono **solo** gli ingredienti corrispondenti a quegli id e realmente presenti nel database;
-  3. si chiede il nome del file (default suggerito `ricettario-parziale-AAAA-MM-GG.json`) e si scarica.
+  1. si calcola la **chiusura transitiva** delle ricette: quelle selezionate **più** ogni
+     sotto-ricetta da esse referenziata via `ricetta_id` (anche nei mise en place), a qualsiasi
+     profondità — così il file non ha riferimenti rotti (vedi
+     [ricette-componibili-e-mise-en-place.md](ricette-componibili-e-mise-en-place.md));
+  2. si raccolgono gli `ingrediente_id` citati nelle righe di **tutte** quelle ricette (lista
+     principale e mise en place);
+  3. si includono **solo** gli ingredienti corrispondenti a quegli id e realmente presenti nel database;
+  4. si chiede il nome del file (default suggerito `ricettario-parziale-AAAA-MM-GG.json`) e si scarica.
 
 ## Dati coinvolti
 - Struttura del file invariata rispetto a §5b di `CLAUDE.md`: `{ versione, ingredienti, ricette }`.

@@ -178,10 +178,15 @@ function openForm(container, ing) {
 }
 
 // Delete an ingredient, warning if it is used in any recipe (avoid orphan refs).
+// Checks both the main ingredient list and the mise en place of each recipe.
 async function eliminaIngrediente(ing, container) {
   const tutte = await db.ricette.toArray();
+  const righeDi = (r) => [
+    ...(r.ingredienti || []),
+    ...(r.mise_en_place && Array.isArray(r.mise_en_place.ingredienti) ? r.mise_en_place.ingredienti : []),
+  ];
   const usata = tutte.filter((r) =>
-    (r.ingredienti || []).some((riga) => riga.ingrediente_id === ing.id)
+    righeDi(r).some((riga) => riga.ingrediente_id === ing.id)
   );
 
   let messaggio = `Eliminare l'ingrediente "${ing.nome}"?`;

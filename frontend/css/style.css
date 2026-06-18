@@ -414,6 +414,68 @@ legend {
   align-self: center;
 }
 
+/* --- Recipe yield (resa) field + component rows (ricette-componibili UI) --- */
+.resa-campo {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}
+.resa-campo input {
+  width: 90px;
+  margin-top: 0;
+}
+.ricalcola-resa {
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+.aggiungi-righe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* Component (sub-recipe) row inside the form: small "ricetta" badge. */
+.riga-form.riga-componente .tag-componente {
+  align-self: center;
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.1rem 0.35rem;
+}
+
+/* Component item shown in a recipe card / read-only view: clickable name. */
+.ingredienti-list .riga-componente {
+  list-style: none;
+  margin-left: -1.2rem;
+}
+.ingredienti-list .riga-componente::before {
+  content: "🧩 ";
+}
+.link-componente {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-componente:hover {
+  color: var(--accent-dark);
+}
+.mep-titolo {
+  margin: 0.5rem 0 0.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 /* --- Toast confirmation --- */
 .toast {
   position: fixed;

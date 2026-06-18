@@ -1,11 +1,73 @@
 // CRUD + UI for recipes (CLAUDE.md §5). User-facing texts in Italian.
 
 import { db, nuovaRicettaId } from './db.js';
-import { scalaQuantita } from './calcoli.js';
+import { scalaQuantita, calcolaResaPredefinita } from './calcoli.js';
 
 let filtroTag = ''; // '' = tutti
 let filtroAutore = ''; // '' = tutti
 let ricercaTesto = ''; // free-text search over name + contents
+
+// All rows of a recipe where ingredient/sub-recipe references live (main list +
+// mise en place). Shared by search, cycle checks and delete protection.
+function righeDiRicetta(r) {
+  return [
+    ...(Array.isArray(r.ingredienti) ? r.ingredienti : []),
+    ...(r && r.mise_en_place && Array.isArray(r.mise_en_place.ingredienti)
+      ? r.mise_en_place.ingredienti
+      : []),
+  ];
+}
+
+// Read the rows of a form container into data objects, branching on the row kind
+// (ingredient vs sub-recipe). Skips rows with no selection.
+function leggiRighe(container) {
+  return [...container.querySelectorAll('.riga-form')]
+    .map((row) => {
+      const sel = row.querySelector('select');
+      const id = sel ? sel.value : '';
+      if (!id) return null;
+      const qRaw = row.querySelector('.qta').value;
+      const um = row.querySelector('.um').value.trim();
+      const quantita = qRaw === '' ? null : Number(qRaw);
+      if (row.classList.contains('riga-componente')) {
+        return { ricetta_id: id, quantita, unita_misura: um };
+      }
+      return { ingrediente_id: id, quantita, unita_misura: um };
+    })
+    .filter(Boolean);
+}
+
+// Recipes that may NOT be used as a component of recipe `idCorrente`, because
+// doing so would create a cycle: `idCorrente` itself plus every recipe that
+// (transitively) already uses it. A new recipe (no id) forbids nothing.
+function ricetteVietate(idCorrente, tutte) {
+  const vietate = new Set();
+  if (!idCorrente) return vietate;
+  vietate.add(idCorrente);
+
+  // Reverse adjacency: usatoDa.get(X) = recipes that directly use X.
+  const usatoDa = new Map();
+  for (const r of tutte) {
+    for (const riga of righeDiRicetta(r)) {
+      if (riga.ricetta_id) {
+        if (!usatoDa.has(riga.ricetta_id)) usatoDa.set(riga.ricetta_id, new Set());
+        usatoDa.get(riga.ricetta_id).add(r.id);
+      }
+    }
+  }
+
+  const coda = [idCorrente];
+  while (coda.length) {
+    const x = coda.pop();
+    for (const chi of usatoDa.get(x) || []) {
+      if (!vietate.has(chi)) {
+        vietate.add(chi);
+        coda.push(chi);
+      }
+    }
+  }
+  return vietate;
+}
 
 // Render the whole "Ricette" section into `container`.
 export async function renderRicette(container) {
@@ -117,16 +179,150 @@ async function tuttiGliAutori() {
 }
 
 // Lowercased searchable text for a recipe: name + author + tags + instructions
-// + the names of its ingredients (resolved via `ingMap`).
-function testoRicercabile(r, ingMap) {
+// + the names of its ingredients/sub-recipes (resolved via the maps), including
+// the mise en place.
+function testoRicercabile(r, ingMap, ricMap) {
   const parti = [r.nome || '', r.autore || ''];
   for (const t of r.tag || []) parti.push(t);
   for (const passo of r.istruzioni || []) parti.push(passo);
-  for (const riga of r.ingredienti || []) {
-    const ing = ingMap.get(riga.ingrediente_id);
-    if (ing && ing.nome) parti.push(ing.nome);
+  const aggiungiRighe = (righe) => {
+    for (const riga of righe || []) {
+      if (riga.ricetta_id) {
+        const sub = ricMap.get(riga.ricetta_id);
+        if (sub && sub.nome) parti.push(sub.nome);
+      } else {
+        const ing = ingMap.get(riga.ingrediente_id);
+        if (ing && ing.nome) parti.push(ing.nome);
+      }
+    }
+  };
+  aggiungiRighe(r.ingredienti);
+  if (r.mise_en_place) {
+    aggiungiRighe(r.mise_en_place.ingredienti);
+    for (const passo of r.mise_en_place.istruzioni || []) parti.push(passo);
   }
   return parti.join(' ').toLowerCase();
+}
+
+// Render a list of rows (ingredient or sub-recipe) into a <ul>. Sub-recipe rows
+// are shown distinctly and are clickable (open a read-only view). Missing
+// references are flagged. Shared by the card and the read-only view.
+function appendRigheLi(ul, righe, ingMap, ricMap) {
+  for (const riga of righe || []) {
+    const li = document.createElement('li');
+    const q = riga.quantita == null ? '' : `${riga.quantita} `;
+    const um = riga.unita_misura || '';
+    if (riga.ricetta_id) {
+      const sub = ricMap.get(riga.ricetta_id);
+      if (sub) {
+        li.className = 'riga-componente';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'link-componente';
+        btn.textContent = sub.nome;
+        btn.onclick = () => mostraRicettaSolaLettura(sub, ingMap, ricMap);
+        const meta = document.createElement('span');
+        meta.textContent = ` (componente): ${q}${um}`.replace(/\s+$/, '');
+        li.append(btn, meta);
+      } else {
+        li.className = 'mancante';
+        li.textContent = `⚠ ricetta componente mancante: ${q}${um}`.trim();
+      }
+    } else {
+      const ing = ingMap.get(riga.ingrediente_id);
+      const nomeIng = ing ? ing.nome : '⚠ ingrediente mancante';
+      li.textContent = `${nomeIng}: ${q}${um}`.trim();
+      if (!ing) li.className = 'mancante';
+    }
+    ul.append(li);
+  }
+}
+
+// Append a "Mise en place" block (ingredients + steps) to `target`, if present
+// and non-empty. Shared by the card and the read-only view.
+function appendMiseEnPlace(target, ric, ingMap, ricMap) {
+  const mep = ric.mise_en_place;
+  if (!mep) return;
+  const haIng = (mep.ingredienti || []).length > 0;
+  const haIstr = (mep.istruzioni || []).length > 0;
+  if (!haIng && !haIstr) return;
+
+  const titolo = document.createElement('p');
+  titolo.className = 'mep-titolo';
+  titolo.textContent = 'Mise en place';
+  target.append(titolo);
+
+  if (haIng) {
+    const ul = document.createElement('ul');
+    ul.className = 'ingredienti-list';
+    appendRigheLi(ul, mep.ingredienti, ingMap, ricMap);
+    target.append(ul);
+  }
+  if (haIstr) {
+    const ol = document.createElement('ol');
+    ol.className = 'istruzioni-list';
+    for (const step of mep.istruzioni) {
+      const li = document.createElement('li');
+      li.textContent = step;
+      ol.append(li);
+    }
+    target.append(ol);
+  }
+}
+
+// Read-only popup showing a recipe (used when clicking a sub-recipe component).
+// Components inside it are clickable too (re-opens the same view).
+function mostraRicettaSolaLettura(ric, ingMap, ricMap) {
+  const overlay = document.createElement('div');
+  overlay.className = 'form-overlay';
+  const box = document.createElement('div');
+  box.className = 'form-box form-box-large';
+
+  const h = document.createElement('h3');
+  h.textContent = ric.nome;
+  box.append(h);
+
+  const meta = document.createElement('p');
+  meta.className = 'riga-meta';
+  meta.textContent =
+    `Autore: ${ric.autore || 'non indicato'} · ${ric.porzioni_base || 1} porzione/i` +
+    (ric.resa ? ` · Resa: ${ric.resa.quantita} ${ric.resa.unita_misura}` : '');
+  box.append(meta);
+
+  appendMiseEnPlace(box, ric, ingMap, ricMap);
+
+  if ((ric.ingredienti || []).length) {
+    const ul = document.createElement('ul');
+    ul.className = 'ingredienti-list';
+    appendRigheLi(ul, ric.ingredienti, ingMap, ricMap);
+    box.append(ul);
+  }
+  if ((ric.istruzioni || []).length) {
+    const ol = document.createElement('ol');
+    ol.className = 'istruzioni-list';
+    for (const step of ric.istruzioni) {
+      const li = document.createElement('li');
+      li.textContent = step;
+      ol.append(li);
+    }
+    box.append(ol);
+  }
+
+  const azioni = document.createElement('div');
+  azioni.className = 'form-actions';
+  const chiudi = document.createElement('button');
+  chiudi.type = 'button';
+  chiudi.className = 'primary';
+  chiudi.textContent = 'Chiudi';
+  chiudi.onclick = () => overlay.remove();
+  azioni.append(chiudi);
+  box.append(azioni);
+
+  overlay.append(box);
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+  document.body.append(overlay);
 }
 
 async function renderLista(list, container) {
@@ -142,15 +338,16 @@ async function renderLista(list, container) {
     return;
   }
 
-  // Resolve ingredient names (used both for display and for content search).
+  // Resolve ingredient and recipe names (used for display and for content search).
   const ingMap = new Map((await db.ingredienti.toArray()).map((i) => [i.id, i]));
+  const ricMap = new Map(tutte.map((r) => [r.id, r]));
 
   // Apply tag + author + text filters together (AND).
   const q = ricercaTesto.trim().toLowerCase();
   const ricette = tutte.filter((r) => {
     if (filtroTag && !(r.tag || []).includes(filtroTag)) return false;
     if (filtroAutore && r.autore !== filtroAutore) return false;
-    if (q && !testoRicercabile(r, ingMap).includes(q)) return false;
+    if (q && !testoRicercabile(r, ingMap, ricMap).includes(q)) return false;
     return true;
   });
 
@@ -172,7 +369,8 @@ async function renderLista(list, container) {
     nome.textContent = r.nome;
     const meta = document.createElement('span');
     meta.className = 'riga-meta';
-    meta.textContent = `${r.porzioni_base || 1} porzione/i`;
+    const resaTxt = r.resa ? ` · Resa: ${r.resa.quantita} ${r.resa.unita_misura}` : '';
+    meta.textContent = `${r.porzioni_base || 1} porzione/i${resaTxt}`;
     top.append(nome, meta);
 
     // Author line, always visible. Older recipes saved before the `autore`
@@ -205,17 +403,12 @@ async function renderLista(list, container) {
     sum.textContent = 'Ingredienti e procedimento';
     dettagli.append(sum);
 
+    // Mise en place first (it's the preliminary preparation).
+    appendMiseEnPlace(dettagli, r, ingMap, ricMap);
+
     const ul = document.createElement('ul');
     ul.className = 'ingredienti-list';
-    for (const riga of r.ingredienti || []) {
-      const ing = ingMap.get(riga.ingrediente_id);
-      const li = document.createElement('li');
-      const nomeIng = ing ? ing.nome : '⚠ ingrediente mancante';
-      const q = riga.quantita == null ? '' : `${riga.quantita} `;
-      li.textContent = `${nomeIng}: ${q}${riga.unita_misura || ''}`.trim();
-      if (!ing) li.className = 'mancante';
-      ul.append(li);
-    }
+    appendRigheLi(ul, r.ingredienti, ingMap, ricMap);
     dettagli.append(ul);
 
     if ((r.istruzioni || []).length) {
@@ -349,14 +542,23 @@ async function selezionaBase(container) {
 // Open the recipe form.
 //   opts.ric  → edit an existing recipe (updates it on save)
 //   opts.base → create a new recipe pre-filled from `base` (copy), recalculating
-//               ingredient quantities if the portions change (spec)
+//               quantities and yield if the portions change (spec)
 //   neither   → blank new recipe
 async function openForm(container, opts = {}) {
   const { ric, base } = opts;
   const isEdit = !!ric;
   const isCopia = !!base;
   const prefill = ric || base; // source of pre-filled values
-  const ingredienti = await db.ingredienti.orderBy('nome').toArray();
+  const [ingredienti, ricette] = await Promise.all([
+    db.ingredienti.orderBy('nome').toArray(),
+    db.ricette.orderBy('nome').toArray(),
+  ]);
+
+  // Recipes selectable as components: all except those that would form a cycle
+  // with the recipe being edited (none excluded for a brand-new recipe).
+  const vietate = ricetteVietate(isEdit ? ric.id : null, ricette);
+  const selezionabili = ricette.filter((r) => !vietate.has(r.id));
+  const senzaComponenti = selezionabili.length === 0;
 
   const form = document.createElement('form');
   form.className = 'form-overlay';
@@ -372,17 +574,37 @@ async function openForm(container, opts = {}) {
       <label>Porzioni base
         <input name="porzioni_base" type="number" min="1" step="1" value="1">
       </label>
+      <label>Resa (quanto produce la ricetta)</label>
+      <div class="resa-campo">
+        <input name="resa_quantita" type="number" min="0" step="any" class="resa-q" placeholder="q.tà">
+        <input name="resa_unita" class="resa-u" placeholder="unità">
+        <button type="button" class="ricalcola-resa" title="Imposta la resa alla somma delle quantità">↻ ricalcola</button>
+      </div>
 
       <fieldset>
         <legend>Ingredienti</legend>
         <div class="righe-ingredienti"></div>
-        <button type="button" class="aggiungi-ingrediente">+ Aggiungi ingrediente</button>
+        <div class="aggiungi-righe">
+          <button type="button" class="aggiungi-ingrediente">+ Aggiungi ingrediente</button>
+          <button type="button" class="aggiungi-componente" ${senzaComponenti ? 'disabled' : ''}>+ Aggiungi ricetta (componente)</button>
+        </div>
       </fieldset>
 
       <fieldset>
         <legend>Procedimento (un passo per riga)</legend>
         <div class="righe-istruzioni"></div>
         <button type="button" class="aggiungi-istruzione">+ Aggiungi passo</button>
+      </fieldset>
+
+      <fieldset>
+        <legend>Mise en place — preparazione preliminare (facoltativa)</legend>
+        <div class="mep-righe-ingredienti"></div>
+        <div class="aggiungi-righe">
+          <button type="button" class="mep-aggiungi-ingrediente">+ Aggiungi ingrediente</button>
+          <button type="button" class="mep-aggiungi-componente" ${senzaComponenti ? 'disabled' : ''}>+ Aggiungi ricetta (componente)</button>
+        </div>
+        <div class="mep-righe-istruzioni"></div>
+        <button type="button" class="mep-aggiungi-istruzione">+ Aggiungi passo</button>
       </fieldset>
 
       <label>Tag (separati da virgola)
@@ -398,9 +620,34 @@ async function openForm(container, opts = {}) {
 
   const righeIng = form.querySelector('.righe-ingredienti');
   const righeIstr = form.querySelector('.righe-istruzioni');
+  const righeMep = form.querySelector('.mep-righe-ingredienti');
+  const righeMepIstr = form.querySelector('.mep-righe-istruzioni');
+  const resaQ = form.querySelector('[name=resa_quantita]');
+  const resaU = form.querySelector('[name=resa_unita]');
 
-  // Build one ingredient row (select + quantità + unità + remove).
-  function rigaIngrediente(valore = {}) {
+  // Yield (resa) follows the running sum of the MAIN ingredient rows until the
+  // user edits it by hand (then `resaAuto` is false and we leave it alone).
+  let resaAuto = true;
+  function aggiornaResaAuto() {
+    if (!resaAuto) return;
+    const r = calcolaResaPredefinita(leggiRighe(righeIng));
+    resaQ.value = r.quantita;
+    resaU.value = r.unita_misura;
+  }
+  resaQ.addEventListener('input', () => {
+    resaAuto = false;
+  });
+  resaU.addEventListener('input', () => {
+    resaAuto = false;
+  });
+  form.querySelector('.ricalcola-resa').onclick = () => {
+    resaAuto = true;
+    aggiornaResaAuto();
+  };
+
+  // Build one ingredient row (select + quantità + unità + remove). `onChange` is
+  // called when the row changes (used to keep the auto resa in sync).
+  function rigaIngrediente(valore = {}, onChange) {
     const row = document.createElement('div');
     row.className = 'riga-form';
     const sel = document.createElement('select');
@@ -427,15 +674,72 @@ async function openForm(container, opts = {}) {
     sel.onchange = () => {
       const ing = ingredienti.find((i) => i.id === sel.value);
       if (ing && !um.value) um.value = ing.unita_misura || '';
+      if (onChange) onChange();
     };
+    q.addEventListener('input', () => onChange && onChange());
+    um.addEventListener('input', () => onChange && onChange());
 
     const rm = document.createElement('button');
     rm.type = 'button';
     rm.textContent = '✕';
     rm.className = 'rimuovi';
-    rm.onclick = () => row.remove();
+    rm.onclick = () => {
+      row.remove();
+      if (onChange) onChange();
+    };
 
     row.append(sel, q, um, rm);
+    return row;
+  }
+
+  // Build one sub-recipe (component) row. Same shape as an ingredient row but the
+  // select lists recipes and the row is tagged `riga-componente`.
+  function rigaSottoRicetta(valore = {}, onChange) {
+    const row = document.createElement('div');
+    row.className = 'riga-form riga-componente';
+
+    const tag = document.createElement('span');
+    tag.className = 'tag-componente';
+    tag.textContent = 'ricetta';
+
+    const sel = document.createElement('select');
+    sel.innerHTML =
+      `<option value="">— scegli ricetta —</option>` +
+      selezionabili.map((r) => `<option value="${r.id}">${escapeText(r.nome)}</option>`).join('');
+    sel.value = valore.ricetta_id || '';
+
+    const q = document.createElement('input');
+    q.type = 'number';
+    q.step = 'any';
+    q.placeholder = 'q.tà';
+    q.className = 'qta';
+    if (valore.quantita != null) q.value = valore.quantita;
+    if (valore.quantita != null) q.dataset.base = valore.quantita;
+
+    const um = document.createElement('input');
+    um.placeholder = 'unità';
+    um.className = 'um';
+    um.value = valore.unita_misura || '';
+
+    // Prefill the unit from the chosen recipe's yield when empty.
+    sel.onchange = () => {
+      const r = ricette.find((x) => x.id === sel.value);
+      if (r && r.resa && !um.value) um.value = r.resa.unita_misura || '';
+      if (onChange) onChange();
+    };
+    q.addEventListener('input', () => onChange && onChange());
+    um.addEventListener('input', () => onChange && onChange());
+
+    const rm = document.createElement('button');
+    rm.type = 'button';
+    rm.textContent = '✕';
+    rm.className = 'rimuovi';
+    rm.onclick = () => {
+      row.remove();
+      if (onChange) onChange();
+    };
+
+    row.append(tag, sel, q, um, rm);
     return row;
   }
 
@@ -454,10 +758,24 @@ async function openForm(container, opts = {}) {
     return row;
   }
 
+  // Route a stored row to the right factory based on its kind.
+  function appendRiga(target, riga, onChange) {
+    if (riga && riga.ricetta_id) target.append(rigaSottoRicetta(riga, onChange));
+    else target.append(rigaIngrediente(riga || {}, onChange));
+  }
+
   form.querySelector('.aggiungi-ingrediente').onclick = () =>
-    righeIng.append(rigaIngrediente());
+    righeIng.append(rigaIngrediente({}, aggiornaResaAuto));
+  form.querySelector('.aggiungi-componente').onclick = () =>
+    righeIng.append(rigaSottoRicetta({}, aggiornaResaAuto));
   form.querySelector('.aggiungi-istruzione').onclick = () =>
     righeIstr.append(rigaIstruzione());
+  form.querySelector('.mep-aggiungi-ingrediente').onclick = () =>
+    righeMep.append(rigaIngrediente({}, null));
+  form.querySelector('.mep-aggiungi-componente').onclick = () =>
+    righeMep.append(rigaSottoRicetta({}, null));
+  form.querySelector('.mep-aggiungi-istruzione').onclick = () =>
+    righeMepIstr.append(rigaIstruzione());
 
   // Prefill on edit or copy. On copy, suggest "Copia di …" as the name; the
   // original recipe is never touched (we only read `base`).
@@ -467,26 +785,44 @@ async function openForm(container, opts = {}) {
     form.querySelector('[name=autore]').value = prefill.autore || '';
     form.querySelector('[name=porzioni_base]').value = prefill.porzioni_base || 1;
     form.querySelector('[name=tag]').value = (prefill.tag || []).join(', ');
-    for (const riga of prefill.ingredienti || []) righeIng.append(rigaIngrediente(riga));
+    for (const riga of prefill.ingredienti || []) appendRiga(righeIng, riga, aggiornaResaAuto);
     for (const step of prefill.istruzioni || []) righeIstr.append(rigaIstruzione(step));
+    if (prefill.mise_en_place) {
+      for (const riga of prefill.mise_en_place.ingredienti || []) appendRiga(righeMep, riga, null);
+      for (const step of prefill.mise_en_place.istruzioni || []) righeMepIstr.append(rigaIstruzione(step));
+    }
   }
-  if (!righeIng.children.length) righeIng.append(rigaIngrediente());
+  if (!righeIng.children.length) righeIng.append(rigaIngrediente({}, aggiornaResaAuto));
   if (!righeIstr.children.length) righeIstr.append(rigaIstruzione());
 
-  // Copy flow: rescale ingredient quantities when the portions change.
-  // Disabled when base portions are missing or 0 (quantities stay unchanged).
+  // Resa initial state: edit keeps the stored yield (manual); new/copy follow the
+  // running sum (auto), so on copy it rescales together with the portions.
+  if (isEdit && ric.resa && typeof ric.resa.quantita === 'number') {
+    resaAuto = false;
+    resaQ.value = ric.resa.quantita;
+    resaU.value = ric.resa.unita_misura || '';
+  } else {
+    resaAuto = true;
+    aggiornaResaAuto();
+  }
+
+  // Copy flow: rescale quantities (main rows, components, mise en place) and the
+  // auto resa when the portions change. Disabled when base portions are missing.
   if (isCopia) {
     const porzInput = form.querySelector('[name=porzioni_base]');
     const basePorzioni = base.porzioni_base;
     porzInput.addEventListener('input', () => {
       if (!basePorzioni || basePorzioni <= 0) return;
       const nuove = parseInt(porzInput.value, 10);
-      for (const row of righeIng.querySelectorAll('.riga-form')) {
-        const q = row.querySelector('.qta');
-        if (q.dataset.base == null || q.dataset.base === '') continue;
-        const scaled = scalaQuantita(Number(q.dataset.base), basePorzioni, nuove);
-        if (scaled != null) q.value = scaled;
+      for (const cont of [righeIng, righeMep]) {
+        for (const row of cont.querySelectorAll('.riga-form')) {
+          const q = row.querySelector('.qta');
+          if (!q || q.dataset.base == null || q.dataset.base === '') continue;
+          const scaled = scalaQuantita(Number(q.dataset.base), basePorzioni, nuove);
+          if (scaled != null) q.value = scaled;
+        }
       }
+      aggiornaResaAuto();
     });
   }
 
@@ -499,19 +835,7 @@ async function openForm(container, opts = {}) {
 
     const porzioni = parseInt(form.querySelector('[name=porzioni_base]').value, 10) || 1;
 
-    const righeIngredienti = [...righeIng.querySelectorAll('.riga-form')]
-      .map((row) => {
-        const id = row.querySelector('select').value;
-        const qRaw = row.querySelector('.qta').value;
-        const um = row.querySelector('.um').value.trim();
-        if (!id) return null;
-        return {
-          ingrediente_id: id,
-          quantita: qRaw === '' ? null : Number(qRaw),
-          unita_misura: um,
-        };
-      })
-      .filter(Boolean);
+    const righeIngredienti = leggiRighe(righeIng);
 
     const istruzioni = [...righeIstr.querySelectorAll('.step')]
       .map((i) => i.value.trim())
@@ -523,27 +847,40 @@ async function openForm(container, opts = {}) {
       .map((t) => t.trim())
       .filter(Boolean);
 
+    // Yield: always present (mandatory in v3). Empty quantity → 0; empty unit → g.
+    const resaQuant = resaQ.value === '' ? 0 : Number(resaQ.value);
+    const resa = {
+      quantita: Number.isFinite(resaQuant) && resaQuant >= 0 ? resaQuant : 0,
+      unita_misura: resaU.value.trim() || 'g',
+    };
+
     const data = {
       nome,
       autore,
       porzioni_base: porzioni,
+      resa,
       ingredienti: righeIngredienti,
       istruzioni,
       tag,
     };
 
-    if (isEdit) {
-      await db.ricette.update(ric.id, data);
-    } else {
-      await db.ricette.add({ id: nuovaRicettaId(), ...data });
+    // Mise en place: only saved when it has some content (field is optional).
+    const mepIngredienti = leggiRighe(righeMep);
+    const mepIstruzioni = [...righeMepIstr.querySelectorAll('.step')]
+      .map((i) => i.value.trim())
+      .filter(Boolean);
+    if (mepIngredienti.length || mepIstruzioni.length) {
+      data.mise_en_place = { ingredienti: mepIngredienti, istruzioni: mepIstruzioni };
     }
+
+    // `put` replaces the whole record by id, so removing a mise en place or
+    // changing the resa is persisted (no stale leftover fields).
+    const id = isEdit ? ric.id : nuovaRicettaId();
+    await db.ricette.put({ id, ...data });
+
     form.remove();
     await renderRicette(container);
-    mostraToast(
-      isEdit
-        ? 'Ricetta aggiornata.'
-        : `Ricetta "${nome}" salvata.`
-    );
+    mostraToast(isEdit ? 'Ricetta aggiornata.' : `Ricetta "${nome}" salvata.`);
   };
 
   document.body.append(form);
@@ -551,7 +888,21 @@ async function openForm(container, opts = {}) {
 }
 
 async function eliminaRicetta(ric, container) {
-  if (!confirm(`Eliminare la ricetta "${ric.nome}"?`)) return;
+  // Warn if the recipe is used as a component by other recipes (avoid orphan refs).
+  const tutte = await db.ricette.toArray();
+  const usata = tutte.filter(
+    (r) => r.id !== ric.id && righeDiRicetta(r).some((riga) => riga.ricetta_id === ric.id)
+  );
+
+  let messaggio = `Eliminare la ricetta "${ric.nome}"?`;
+  if (usata.length > 0) {
+    const nomi = usata.map((r) => `• ${r.nome}`).join('\n');
+    messaggio =
+      `Attenzione: "${ric.nome}" è usata come componente in ${usata.length} ricetta/e:\n\n${nomi}\n\n` +
+      `Eliminandola, quelle ricette resteranno con un riferimento mancante.\n\nEliminare comunque?`;
+  }
+
+  if (!confirm(messaggio)) return;
   await db.ricette.delete(ric.id);
   await renderRicette(container);
 }

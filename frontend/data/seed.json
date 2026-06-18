@@ -1,5 +1,5 @@
 {
-  "versione": 2,
+  "versione": 3,
   "ingredienti": [
     { "id": "ing_001", "nome": "Farina 00", "unita_misura": "g", "categoria": "farine" },
     { "id": "ing_002", "nome": "Zucchero", "unita_misura": "g", "categoria": "zuccheri" },
@@ -20,6 +20,7 @@
       "nome": "Pancake di esempio",
       "autore": "Chef Esempio",
       "porzioni_base": 4,
+      "resa": { "quantita": 500, "unita_misura": "g" },
       "ingredienti": [
         { "ingrediente_id": "ing_001", "quantita": 200, "unita_misura": "g" },
         { "ingrediente_id": "ing_004", "quantita": 250, "unita_misura": "ml" },
@@ -44,6 +45,7 @@
       "nome": "Spaghetti al pomodoro di esempio",
       "autore": "Nonna Pina",
       "porzioni_base": 2,
+      "resa": { "quantita": 600, "unita_misura": "g" },
       "ingredienti": [
         { "ingrediente_id": "ing_011", "quantita": 180, "unita_misura": "g" },
         { "ingrediente_id": "ing_008", "quantita": 400, "unita_misura": "g" },
@@ -65,6 +67,7 @@
       "nome": "Torta allo yogurt di esempio",
       "autore": "Chef Esempio",
       "porzioni_base": 8,
+      "resa": { "quantita": 700, "unita_misura": "g" },
       "ingredienti": [
         { "ingrediente_id": "ing_012", "quantita": 125, "unita_misura": "g" },
         { "ingrediente_id": "ing_001", "quantita": 200, "unita_misura": "g" },

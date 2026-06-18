@@ -85,18 +85,43 @@ export async function esportaParziale() {
   const scelte = await selezionaRicette(ricette);
   if (!scelte || scelte.length === 0) return; // cancelled or nothing selected
 
-  // Collect the ingredient ids referenced by the chosen recipes, then keep only
-  // the ingredients that actually exist in the database.
+  // All rows of a recipe (main list + mise en place), where sub-recipe and
+  // ingredient references both live.
+  const perId = new Map(ricette.map((r) => [r.id, r]));
+  const righeDi = (r) => [
+    ...(Array.isArray(r.ingredienti) ? r.ingredienti : []),
+    ...(r.mise_en_place && Array.isArray(r.mise_en_place.ingredienti) ? r.mise_en_place.ingredienti : []),
+  ];
+
+  // Transitive closure: export the chosen recipes plus every sub-recipe they
+  // reference via `ricetta_id` (directly or indirectly), so the file has no
+  // dangling references (ricette-componibili spec).
+  const idRicetteDaEsportare = new Set();
+  const coda = scelte.map((r) => r.id);
+  while (coda.length) {
+    const id = coda.pop();
+    if (idRicetteDaEsportare.has(id)) continue;
+    idRicetteDaEsportare.add(id);
+    const r = perId.get(id);
+    if (!r) continue; // referenced recipe missing locally: just skip it
+    for (const riga of righeDi(r)) {
+      if (riga.ricetta_id && !idRicetteDaEsportare.has(riga.ricetta_id)) coda.push(riga.ricetta_id);
+    }
+  }
+  const ricetteEsportate = ricette.filter((r) => idRicetteDaEsportare.has(r.id));
+
+  // Collect the ingredient ids referenced by all those recipes (main rows and
+  // mise en place), then keep only the ingredients that exist in the database.
   const idUsati = new Set();
-  for (const r of scelte) {
-    for (const riga of r.ingredienti || []) {
+  for (const r of ricetteEsportate) {
+    for (const riga of righeDi(r)) {
       if (riga.ingrediente_id) idUsati.add(riga.ingrediente_id);
     }
   }
   const tuttiIngredienti = await db.ingredienti.toArray();
   const ingredienti = tuttiIngredienti.filter((i) => idUsati.has(i.id));
 
-  const payload = { versione: DATA_VERSION, ingredienti, ricette: scelte };
+  const payload = { versione: DATA_VERSION, ingredienti, ricette: ricetteEsportate };
   scaricaPayload(payload, nomeFilePredefinito('ricettario-parziale'));
 }
 
@@ -245,8 +270,9 @@ export async function importaDati(file, onDone) {
   const { ingredienti, ricette } = datiMigrati;
 
   const avvisoMigrazione = migrato
-    ? '\n\nIl file è in un formato precedente: alle ricette senza autore verrà ' +
-      `assegnato "${AUTORE_DEFAULT}".`
+    ? '\n\nIl file è in un formato precedente e verrà aggiornato automaticamente: ' +
+      `alle ricette senza autore verrà assegnato "${AUTORE_DEFAULT}" e, dove manca, ` +
+      'verrà calcolata una resa a partire dalle quantità degli ingredienti.'
     : '';
   const ok = confirm(
     `Importare ${ingredienti.length} ingredienti e ${ricette.length} ricette?\n\n` +

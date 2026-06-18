@@ -93,12 +93,16 @@ Conseguenze:
 - `nome`
 - `autore` (chi ha creato la ricetta; obbligatorio dalla versione 2)
 - `porzioni_base` (numero di porzioni a cui si riferiscono le quantità)
+- `resa` (obbligatoria dalla versione 3): `{ quantita, unita_misura }`, quanto produce la ricetta alle `porzioni_base`
 - `istruzioni` (passi)
-- `ingredienti`: lista di righe `{ ingrediente_id, quantita, unita_misura }`
+- `ingredienti`: lista di righe, ciascuna **un ingrediente** `{ ingrediente_id, quantita, unita_misura }` **oppure una sotto-ricetta** `{ ricetta_id, quantita, unita_misura }` (dalla versione 3)
+- `mise_en_place` (facoltativa, dalla versione 3): mini-ricetta inline `{ ingredienti, istruzioni }`, eredita le porzioni della ricetta madre
 - `tag` (facoltativo: es. vegetariano, dolce, primo…)
 
 ### Relazione
 - Ricetta ↔ Ingredienti è una relazione **molti-a-molti** con attributo `quantita` sulla riga.
+- Ricetta ↔ Ricetta (sotto-ricette): una ricetta può comporne altre tramite `ricetta_id`; **vietati i
+  cicli**. Vedi [ricette-componibili-e-mise-en-place.md](docs/specs/ricette-componibili-e-mise-en-place.md).
 
 ---
 
@@ -136,7 +140,7 @@ Struttura del file di export (riepilogo; dettaglio in [docs/formato-file-json.md
 
 ```json
 {
-  "versione": 2,
+  "versione": 3,
   "ingredienti": [
     { "id": "ing_001", "nome": "Farina 00", "unita_misura": "g", "categoria": "farine" }
   ],
@@ -146,6 +150,7 @@ Struttura del file di export (riepilogo; dettaglio in [docs/formato-file-json.md
       "nome": "Pane base",
       "autore": "Mario Rossi",
       "porzioni_base": 4,
+      "resa": { "quantita": 800, "unita_misura": "g" },
       "ingredienti": [
         { "ingrediente_id": "ing_001", "quantita": 500, "unita_misura": "g" }
       ],
@@ -225,6 +230,8 @@ Stato delle feature:
 | [pannello-info.md](docs/specs/pannello-info.md) — pulsante "Info" con spiegazione sintetica di come funziona l'app | ✅ Implementata |
 | [ricerca-ingredienti.md](docs/specs/ricerca-ingredienti.md) — barra di ricerca ingredienti per nome o categoria | ✅ Implementata |
 | [ricerca-filtri-ricette.md](docs/specs/ricerca-filtri-ricette.md) — ricette: ricerca per nome/contenuto + filtri per tag e autore (combinati) | ✅ Implementata |
+| [ricette-componibili-e-mise-en-place.md](docs/specs/ricette-componibili-e-mise-en-place.md) — sotto-ricette (`ricetta_id`), `resa` obbligatoria, `mise_en_place`; formato dati v3 (Fase 1: modello dati) | ✅ Implementata |
+| [ricette-componibili-ui.md](docs/specs/ricette-componibili-ui.md) — UI per sotto-ricette, resa e mise en place: form, scheda, copia, eliminazioni protette (Fase 2) | ✅ Implementata |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 

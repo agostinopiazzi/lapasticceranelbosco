@@ -31,7 +31,7 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - `ingredienti` e `ricette` sono **elenchi** (array).
 
 ### Campi non previsti (a ogni livello)
-- A livello di file, ingrediente, ricetta e riga ingrediente sono ammessi **solo** i campi elencati
+- A livello di file, ingrediente, ricetta, riga, resa e mise en place sono ammessi **solo** i campi elencati
   qui e in [../formato-file-json.md](../formato-file-json.md). La presenza di **qualsiasi campo
   estraneo** fa **fallire l'import**, con un messaggio che indica i campi non previsti trovati.
 
@@ -48,12 +48,18 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - `nome`: testo non vuoto.
 - `autore`: testo non vuoto (vedi [autore-ricetta.md](autore-ricetta.md)).
 - `porzioni_base`: intero ≥ 1.
-- `ingredienti`: elenco di righe; ogni riga è un oggetto con:
-  - `ingrediente_id`: testo non vuoto che **deve corrispondere** a un ingrediente presente nel file
-    (integrità referenziale);
+- `resa`: oggetto **obbligatorio** (dalla v3) con `quantita` numero ≥ 0 e `unita_misura` non vuota
+  (vedi [ricette-componibili-e-mise-en-place.md](ricette-componibili-e-mise-en-place.md)).
+- `ingredienti`: elenco di righe; ogni riga ha **esattamente uno** tra `ingrediente_id` e
+  `ricetta_id` (dalla v3), e:
+  - `ingrediente_id`: testo non vuoto che **deve corrispondere** a un ingrediente presente nel file;
+  - **oppure** `ricetta_id`: testo non vuoto che **deve corrispondere** a una ricetta presente nel
+    file (integrità referenziale; vietati i **cicli** tra ricette);
   - `quantita`: numero ≥ 0 **oppure** `null`;
   - `unita_misura` (se presente): testo.
 - `istruzioni`: elenco di testi (può essere vuoto).
+- `mise_en_place` (facoltativo, dalla v3): oggetto con `ingredienti` (righe come sopra) e
+  `istruzioni` (elenco di testi).
 - `tag` (facoltativo): elenco di testi non vuoti.
 
 > Tutti i problemi vengono raccolti e mostrati insieme (non solo il primo), con un riferimento
@@ -77,7 +83,10 @@ Validazione **deterministica** (nessuna AI), tutta in [../../frontend/js/validaz
 - File non JSON (testo, immagine rinominata) → messaggio "non è un file JSON valido".
 - JSON valido ma non un oggetto (numero, testo, elenco) → rifiutato con spiegazione.
 - `id` duplicati tra ingredienti o tra ricette → errore puntuale.
-- Ricetta che cita un `ingrediente_id` inesistente nel file → errore puntuale.
+- Ricetta che cita un `ingrediente_id` o un `ricetta_id` inesistente nel file → errore puntuale.
+- Riga con **entrambi** o **nessuno** tra `ingrediente_id` e `ricetta_id` → errore puntuale.
+- Ricetta senza `resa` (o con `resa` malformata) → errore puntuale.
+- **Ciclo** tra ricette (A→A oppure A→B→A, anche tramite mise en place) → rifiutato con messaggio chiaro.
 - `quantita` testuale o negativa → errore; `null` è ammesso (quantità "a piacere"/`q.b.`).
 - Campo estraneo (es. una ricetta con `"prezzo": 10` o un refuso come `"none"` al posto di `"nome"`)
   → errore che elenca i campi non previsti.

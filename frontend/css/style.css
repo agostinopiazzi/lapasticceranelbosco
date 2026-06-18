@@ -434,6 +434,11 @@ legend {
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+.crea-componente,
+.mep-crea-componente {
+  color: var(--accent);
+  border-color: var(--accent);
+}
 
 /* Component (sub-recipe) row inside the form: small "ricetta" badge. */
 .riga-form.riga-componente .tag-componente {

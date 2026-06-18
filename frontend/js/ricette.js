@@ -555,8 +555,11 @@ async function openForm(container, opts = {}) {
   ]);
 
   // Recipes selectable as components: all except those that would form a cycle
-  // with the recipe being edited (none excluded for a brand-new recipe).
+  // with the recipe being edited (none excluded for a brand-new recipe). When
+  // opened via quick-create, `vietateExtra` carries the originating recipe's
+  // chain so the new recipe can't reference it either (no cycles).
   const vietate = ricetteVietate(isEdit ? ric.id : null, ricette);
+  if (opts.vietateExtra) for (const id of opts.vietateExtra) vietate.add(id);
   const selezionabili = ricette.filter((r) => !vietate.has(r.id));
   const senzaComponenti = selezionabili.length === 0;
 
@@ -564,7 +567,15 @@ async function openForm(container, opts = {}) {
   form.className = 'form-overlay';
   form.innerHTML = `
     <div class="form-box form-box-large">
-      <h3>${isEdit ? 'Modifica ricetta' : isCopia ? 'Nuova ricetta (da copia)' : 'Nuova ricetta'}</h3>
+      <h3>${
+        isEdit
+          ? 'Modifica ricetta'
+          : isCopia
+            ? 'Nuova ricetta (da copia)'
+            : opts.onCreated
+              ? 'Nuova ricetta da aggiungere come componente'
+              : 'Nuova ricetta'
+      }</h3>
       <label>Nome
         <input name="nome" required>
       </label>
@@ -587,6 +598,7 @@ async function openForm(container, opts = {}) {
         <div class="aggiungi-righe">
           <button type="button" class="aggiungi-ingrediente">+ Aggiungi ingrediente</button>
           <button type="button" class="aggiungi-componente" ${senzaComponenti ? 'disabled' : ''}>+ Aggiungi ricetta (componente)</button>
+          <button type="button" class="crea-componente">➕ Crea nuova ricetta e aggiungila</button>
         </div>
       </fieldset>
 
@@ -602,6 +614,7 @@ async function openForm(container, opts = {}) {
         <div class="aggiungi-righe">
           <button type="button" class="mep-aggiungi-ingrediente">+ Aggiungi ingrediente</button>
           <button type="button" class="mep-aggiungi-componente" ${senzaComponenti ? 'disabled' : ''}>+ Aggiungi ricetta (componente)</button>
+          <button type="button" class="mep-crea-componente">➕ Crea nuova ricetta e aggiungila</button>
         </div>
         <div class="mep-righe-istruzioni"></div>
         <button type="button" class="mep-aggiungi-istruzione">+ Aggiungi passo</button>
@@ -777,6 +790,41 @@ async function openForm(container, opts = {}) {
   form.querySelector('.mep-aggiungi-istruzione').onclick = () =>
     righeMepIstr.append(rigaIstruzione());
 
+  // Quick-create: build a brand-new recipe on the fly (full form) and add it as
+  // a component here, without leaving the current form (spec B2). The new recipe
+  // is saved as a standalone recipe; the current form keeps its edits.
+  function creaComponente(target, onChange) {
+    openForm(container, {
+      // Forbid this recipe + its ancestors in the new recipe too (no cycles).
+      vietateExtra: new Set(vietate),
+      onCreated: (nuova) => {
+        selezionabili.push(nuova);
+        ricette.push(nuova);
+        // Extend every existing component menu with the new recipe.
+        for (const sel of form.querySelectorAll('.riga-componente select')) {
+          const opt = document.createElement('option');
+          opt.value = nuova.id;
+          opt.textContent = nuova.nome;
+          sel.append(opt);
+        }
+        // Components now exist: re-enable the "add component" buttons.
+        for (const b of form.querySelectorAll('.aggiungi-componente, .mep-aggiungi-componente')) {
+          b.disabled = false;
+        }
+        // Add a preselected component row at the originating spot.
+        target.append(
+          rigaSottoRicetta(
+            { ricetta_id: nuova.id, unita_misura: nuova.resa ? nuova.resa.unita_misura : '' },
+            onChange
+          )
+        );
+        if (onChange) onChange();
+      },
+    });
+  }
+  form.querySelector('.crea-componente').onclick = () => creaComponente(righeIng, aggiornaResaAuto);
+  form.querySelector('.mep-crea-componente').onclick = () => creaComponente(righeMep, null);
+
   // Prefill on edit or copy. On copy, suggest "Copia di …" as the name; the
   // original recipe is never touched (we only read `base`).
   if (prefill) {
@@ -876,9 +924,17 @@ async function openForm(container, opts = {}) {
     // `put` replaces the whole record by id, so removing a mise en place or
     // changing the resa is persisted (no stale leftover fields).
     const id = isEdit ? ric.id : nuovaRicettaId();
-    await db.ricette.put({ id, ...data });
-
+    const record = { id, ...data };
+    await db.ricette.put(record);
     form.remove();
+
+    // Quick-create mode: hand the new recipe back to the originating form
+    // instead of re-rendering the list (that form is still open).
+    if (opts.onCreated) {
+      opts.onCreated(record);
+      return;
+    }
+
     await renderRicette(container);
     mostraToast(isEdit ? 'Ricetta aggiornata.' : `Ricetta "${nome}" salvata.`);
   };

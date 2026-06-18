@@ -42,6 +42,22 @@ E mostrarle in modo chiaro nella scheda ricetta.
   creare un ciclo dal form. (La validazione import resta come rete di sicurezza, Fase 1.)
   - In **creazione** (ricetta nuova, senza id) nessuna ricetta può richiamarla: il menu le mostra tutte.
 
+### B2. Creazione rapida di una ricetta-componente (decisione utente)
+Per non dover creare prima le ricette e poi richiamarle, accanto a "+ Aggiungi ricetta (componente)"
+c'è un pulsante **"➕ Crea nuova ricetta e aggiungila"** (uno per la lista principale e uno per il
+mise en place).
+- Apre il **form completo** di una nuova ricetta (nome, autore, porzioni, resa, ingredienti,
+  procedimento, eventuale mise en place), sopra il form in corso.
+- Al **salvataggio**: la nuova ricetta viene **salvata** (esiste come ricetta a sé) e
+  **aggiunta automaticamente** come riga componente nel punto da cui è partita la creazione; i menu
+  delle ricette del form in corso si **aggiornano** per includerla, **senza perdere** ciò che si stava
+  scrivendo. All'**annulla** non viene creato nulla.
+- Il pulsante è **sempre attivo** (anche quando non c'è ancora alcuna ricetta selezionabile).
+- **Anti-ciclo**: nella creazione rapida la nuova ricetta **non può** richiamare la ricetta che si sta
+  modificando né le ricette che la richiamano (stesso vincolo del menu, esteso alla nuova ricetta), così
+  non si introducono cicli. La creazione rapida può annidarsi (la nuova ricetta può a sua volta crearne
+  un'altra), con lo stesso vincolo che si propaga.
+
 ### C. Form ricetta — Mise en place
 - Sezione **"Mise en place (preparazione preliminare)"**, facoltativa e inizialmente **vuota/chiusa**.
 - Contiene le proprie righe (stessi due pulsanti: ingrediente / ricetta componente) e i propri passi
@@ -102,6 +118,9 @@ ricalcolano in proporzione (regola di [calcoli.js](../../frontend/js/calcoli.js)
   `ricetta_id`); le ricette componenti **non** vengono duplicate.
 - **Modifica** che ridurrebbe a un ciclo (caso residuo non filtrabile) → bloccata con messaggio.
 - Ricetta componente eliminata altrove → la scheda mostra l'avviso "componente mancante".
+- **Creazione rapida annullata** → nessuna ricetta creata, il form in corso resta invariato.
+- **Creazione rapida confermata e poi annullamento del form in corso** → la nuova ricetta resta
+  comunque salvata come ricetta a sé (è stata creata di proposito), semplicemente non referenziata.
 
 ## Fuori scope
 - Espansione/"esplosione" ricorsiva della sotto-ricetta nei suoi ingredienti base (compito del futuro

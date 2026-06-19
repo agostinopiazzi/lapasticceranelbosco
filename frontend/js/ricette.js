@@ -2,6 +2,7 @@
 
 import { db, nuovaRicettaId } from './db.js';
 import { scalaQuantita, calcolaResaPredefinita } from './calcoli.js';
+import { unitaConValore } from './unita.js';
 
 let filtroTag = ''; // '' = tutti
 let filtroAutore = ''; // '' = tutti
@@ -588,7 +589,7 @@ async function openForm(container, opts = {}) {
       <label>Resa (quanto produce la ricetta)</label>
       <div class="resa-campo">
         <input name="resa_quantita" type="number" min="0" step="any" class="resa-q" placeholder="q.tà">
-        <input name="resa_unita" class="resa-u" placeholder="unità">
+        <select name="resa_unita" class="resa-u"></select>
         <button type="button" class="ricalcola-resa" title="Imposta la resa alla somma delle quantità">↻ ricalcola</button>
       </div>
 
@@ -641,16 +642,29 @@ async function openForm(container, opts = {}) {
   // Yield (resa) follows the running sum of the MAIN ingredient rows until the
   // user edits it by hand (then `resaAuto` is false and we leave it alone).
   let resaAuto = true;
+  // Fill the resa unit dropdown so it always contains `valore` (even a custom or
+  // legacy unit not in the proposed list), then select it.
+  function setResaUnita(valore) {
+    const v = (valore || '').trim();
+    resaU.innerHTML = '';
+    for (const u of unitaConValore(v)) {
+      const opt = document.createElement('option');
+      opt.value = u;
+      opt.textContent = u;
+      resaU.append(opt);
+    }
+    resaU.value = v || 'g';
+  }
   function aggiornaResaAuto() {
     if (!resaAuto) return;
     const r = calcolaResaPredefinita(leggiRighe(righeIng));
     resaQ.value = r.quantita;
-    resaU.value = r.unita_misura;
+    setResaUnita(r.unita_misura);
   }
   resaQ.addEventListener('input', () => {
     resaAuto = false;
   });
-  resaU.addEventListener('input', () => {
+  resaU.addEventListener('change', () => {
     resaAuto = false;
   });
   form.querySelector('.ricalcola-resa').onclick = () => {
@@ -681,16 +695,20 @@ async function openForm(container, opts = {}) {
     const um = document.createElement('input');
     um.placeholder = 'unità';
     um.className = 'um';
-    um.value = valore.unita_misura || '';
+    um.readOnly = true; // forced to the ingredient's unit, not editable by hand
 
-    // Auto-fill unit from the chosen ingredient when empty.
-    sel.onchange = () => {
+    // The unit always matches the chosen ingredient's unit of measure.
+    const aggiornaUnita = () => {
       const ing = ingredienti.find((i) => i.id === sel.value);
-      if (ing && !um.value) um.value = ing.unita_misura || '';
+      um.value = ing ? ing.unita_misura || '' : '';
+    };
+
+    sel.onchange = () => {
+      aggiornaUnita();
       if (onChange) onChange();
     };
     q.addEventListener('input', () => onChange && onChange());
-    um.addEventListener('input', () => onChange && onChange());
+    aggiornaUnita(); // set the unit from the (possibly pre-filled) selection
 
     const rm = document.createElement('button');
     rm.type = 'button';
@@ -732,16 +750,20 @@ async function openForm(container, opts = {}) {
     const um = document.createElement('input');
     um.placeholder = 'unità';
     um.className = 'um';
-    um.value = valore.unita_misura || '';
+    um.readOnly = true; // forced to the recipe's yield unit, not editable by hand
 
-    // Prefill the unit from the chosen recipe's yield when empty.
-    sel.onchange = () => {
+    // The unit always matches the chosen recipe's yield (resa) unit of measure.
+    const aggiornaUnita = () => {
       const r = ricette.find((x) => x.id === sel.value);
-      if (r && r.resa && !um.value) um.value = r.resa.unita_misura || '';
+      um.value = r && r.resa ? r.resa.unita_misura || '' : '';
+    };
+
+    sel.onchange = () => {
+      aggiornaUnita();
       if (onChange) onChange();
     };
     q.addEventListener('input', () => onChange && onChange());
-    um.addEventListener('input', () => onChange && onChange());
+    aggiornaUnita(); // set the unit from the (possibly pre-filled) selection
 
     const rm = document.createElement('button');
     rm.type = 'button';
@@ -848,7 +870,7 @@ async function openForm(container, opts = {}) {
   if (isEdit && ric.resa && typeof ric.resa.quantita === 'number') {
     resaAuto = false;
     resaQ.value = ric.resa.quantita;
-    resaU.value = ric.resa.unita_misura || '';
+    setResaUnita(ric.resa.unita_misura || 'g');
   } else {
     resaAuto = true;
     aggiornaResaAuto();

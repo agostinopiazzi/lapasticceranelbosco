@@ -35,8 +35,11 @@ E mostrarle in modo chiaro nella scheda ricetta.
   - **"+ Aggiungi ingrediente"**: riga come oggi (menu ingrediente + quantità + unità).
   - **"+ Aggiungi ricetta (componente)"**: riga con **menu delle ricette** + quantità + unità.
 - Le due tipologie di riga sono visivamente distinte (es. etichetta/icona "componente").
-- Scegliendo una ricetta componente, l'unità si **precompila** dall'`unita_misura` della sua `resa`
-  (se l'unità è vuota); la quantità si riferisce alla resa di quella ricetta.
+- **Unità di misura forzata e non modificabile**: il campo unità di una riga **non è digitabile**;
+  vale sempre l'`unita_misura` dell'ingrediente selezionato (per le righe ingrediente) o
+  l'`unita_misura` della `resa` della ricetta selezionata (per le righe componente). Cambiando la
+  scelta nel menu, l'unità si aggiorna di conseguenza; senza selezione il campo è vuoto. Solo la
+  **quantità** numerica resta liberamente editabile.
 - **Prevenzione cicli nel menu**: il menu delle ricette componenti **esclude** la ricetta che si sta
   modificando e ogni ricetta che (direttamente o indirettamente) la richiama, così non è possibile
   creare un ciclo dal form. (La validazione import resta come rete di sicurezza, Fase 1.)

@@ -232,6 +232,7 @@ Stato delle feature:
 | [ricerca-filtri-ricette.md](docs/specs/ricerca-filtri-ricette.md) — ricette: ricerca per nome/contenuto + filtri per tag e autore (combinati) | ✅ Implementata |
 | [ricette-componibili-e-mise-en-place.md](docs/specs/ricette-componibili-e-mise-en-place.md) — sotto-ricette (`ricetta_id`), `resa` obbligatoria, `mise_en_place`; formato dati v3 (Fase 1: modello dati) | ✅ Implementata |
 | [ricette-componibili-ui.md](docs/specs/ricette-componibili-ui.md) — UI per sotto-ricette, resa e mise en place: form, scheda, copia, eliminazioni protette (Fase 2) | ✅ Implementata |
+| [unita-misura.md](docs/specs/unita-misura.md) — unità di misura da menu a tendina (elenco unico in `unita.js`); forzate nelle righe ricetta | ✅ Implementata (aggiunta da frontend: futura) |
 
 Legenda stato: ✅ Implementata · 🚧 In corso · 📋 Solo spec (da implementare).
 

@@ -1,9 +1,7 @@
 // CRUD + UI for ingredients (CLAUDE.md §5). User-facing texts in Italian.
 
 import { db, nuovoIngredienteId } from './db.js';
-
-// Common units of measure offered in the form (free text also allowed).
-const UNITA = ['g', 'ml', 'pz', 'q.b.'];
+import { UNITA_MISURA } from './unita.js';
 
 let filtroIngredienti = ''; // search query, matched against nome OR categoria
 
@@ -131,10 +129,10 @@ function openForm(container, ing) {
         <input name="nome" required value="">
       </label>
       <label>Unità di misura
-        <input name="unita_misura" list="unita-list" value="" required>
-        <datalist id="unita-list">
-          ${UNITA.map((u) => `<option value="${u}">`).join('')}
-        </datalist>
+        <select name="unita_misura" required>
+          <option value="">— scegli —</option>
+          ${UNITA_MISURA.map((u) => `<option value="${u}">${u}</option>`).join('')}
+        </select>
       </label>
       <label>Categoria
         <input name="categoria" value="" required>
@@ -149,7 +147,15 @@ function openForm(container, ing) {
   // Set values safely (avoid HTML injection via attribute interpolation).
   if (isEdit) {
     form.querySelector('[name=nome]').value = ing.nome || '';
-    form.querySelector('[name=unita_misura]').value = ing.unita_misura || '';
+    const selUM = form.querySelector('[name=unita_misura]');
+    // Preserve a legacy/custom unit not in the proposed list (e.g. imported "kg").
+    if (ing.unita_misura && !UNITA_MISURA.includes(ing.unita_misura)) {
+      const opt = document.createElement('option');
+      opt.value = ing.unita_misura;
+      opt.textContent = ing.unita_misura;
+      selUM.append(opt);
+    }
+    selUM.value = ing.unita_misura || '';
     form.querySelector('[name=categoria]').value = ing.categoria || '';
   }
 
